@@ -1,0 +1,416 @@
+{
+  "api": {
+    "definitionVersion": "V4",
+    "type": "PROXY",
+    "listeners": [
+      {
+        "type": "HTTP",
+        "paths": [
+          {
+            "path": "/v1/",
+            "overrideAccess": true
+          }
+        ],
+        "entrypoints": [
+          {
+            "type": "http-proxy",
+            "qos": "AUTO"
+          }
+        ]
+      }
+    ],
+    "endpointGroups": [
+      {
+        "name": "default-group",
+        "type": "http-proxy",
+        "loadBalancer": {
+          "type": "ROUND_ROBIN"
+        },
+        "sharedConfiguration": "{}",
+        "endpoints": [
+          {
+            "name": "server1",
+            "type": "http-proxy",
+            "weight": 1,
+            "inheritConfiguration": true,
+            "configuration": {
+              "target": "https://api.example-edu.org/v1"
+            },
+            "services": {},
+            "secondary": false
+          },
+          {
+            "name": "server2",
+            "type": "http-proxy",
+            "weight": 1,
+            "inheritConfiguration": true,
+            "configuration": {
+              "target": "https://api-staging.example-edu.org/v1"
+            },
+            "services": {},
+            "secondary": false
+          }
+        ],
+        "services": {}
+      }
+    ],
+    "analytics": {
+      "enabled": true
+    },
+    "flowExecution": {
+      "mode": "DEFAULT",
+      "matchRequired": false
+    },
+    "flows": [
+      {
+        "id": "e797ddde-0998-4f34-97dd-de09989f34ce",
+        "name": "",
+        "enabled": true,
+        "selectors": [
+          {
+            "type": "HTTP",
+            "path": "/",
+            "pathOperator": "STARTS_WITH",
+            "methods": []
+          }
+        ],
+        "request": [
+          {
+            "name": "Rate Limit",
+            "enabled": true,
+            "policy": "rate-limit",
+            "configuration": {
+              "async": false,
+              "addHeaders": false,
+              "rate": {
+                "useKeyOnly": false,
+                "periodTime": 1,
+                "limit": 100,
+                "periodTimeUnit": "SECONDS",
+                "key": ""
+              }
+            }
+          }
+        ],
+        "response": [],
+        "subscribe": [],
+        "publish": []
+      },
+      {
+        "id": "f3d4954a-ee96-4f1f-9495-4aee961f1fec",
+        "name": "",
+        "enabled": true,
+        "selectors": [
+          {
+            "type": "CONDITION",
+            "condition": ""
+          },
+          {
+            "type": "HTTP",
+            "path": "/institution",
+            "pathOperator": "EQUALS",
+            "methods": [
+              "GET"
+            ]
+          }
+        ],
+        "request": [],
+        "response": [],
+        "subscribe": [],
+        "publish": []
+      },
+      {
+        "id": "fbe55b38-00c6-4ad1-a55b-3800c68ad14d",
+        "name": "",
+        "enabled": true,
+        "selectors": [
+          {
+            "type": "CONDITION",
+            "condition": ""
+          },
+          {
+            "type": "HTTP",
+            "path": "/programs",
+            "pathOperator": "EQUALS",
+            "methods": [
+              "GET"
+            ]
+          }
+        ],
+        "request": [],
+        "response": [],
+        "subscribe": [],
+        "publish": []
+      },
+      {
+        "id": "1f282d6a-4092-4502-a82d-6a4092d50260",
+        "name": "",
+        "enabled": true,
+        "selectors": [
+          {
+            "type": "CONDITION",
+            "condition": ""
+          },
+          {
+            "type": "HTTP",
+            "path": "/programs/:programId",
+            "pathOperator": "EQUALS",
+            "methods": [
+              "GET"
+            ]
+          }
+        ],
+        "request": [],
+        "response": [],
+        "subscribe": [],
+        "publish": []
+      }
+    ],
+    "id": "26e010da-69e7-4047-a010-da69e7604722",
+    "name": "Educational Institution Partner API",
+    "description": "API for partner institutions to securely access educational data while complying with\nprivacy regulations (FERPA, GDPR, etc.). All data exchange is subject to data sharing\nagreements between partner institutions.",
+    "apiVersion": "1.0.0",
+    "createdAt": "2025-06-18T17:23:33.494Z",
+    "updatedAt": "2025-06-18T19:01:15.408Z",
+    "disableMembershipNotifications": false,
+    "state": "STOPPED",
+    "visibility": "PRIVATE",
+    "lifecycleState": "CREATED",
+    "tags": [],
+    "primaryOwner": {
+      "id": "994c6dae-ec60-4036-8c6d-aeec60603669",
+      "email": "XXX@graviteesource.com",
+      "displayName": "XXX",
+      "type": "USER"
+    },
+    "originContext": {
+      "origin": "MANAGEMENT"
+    },
+    "responseTemplates": {},
+    "resources": [],
+    "properties": []
+  },
+  "metadata": [
+    {
+      "key": "email-support",
+      "name": "email-support",
+      "format": "MAIL",
+      "value": "${(api.primaryOwner.email)!''}",
+      "defaultValue": "support@change.me"
+    }
+  ],
+  "pages": [
+    {
+      "id": "10e90c01-2066-4a86-a90c-0120669a8640",
+      "name": "Swagger",
+      "type": "SWAGGER",
+      "content": "openapi: 3.0.3\ninfo:\n  title: Educational Institution Partner API\n  description: |\n    API for partner institutions to securely access educational data while complying with\n    privacy regulations (FERPA, GDPR, etc.). All data exchange is subject to data sharing\n    agreements between partner institutions.\n  version: 1.0.0\n  contact:\n    name: API Support\n    email: api-support@example-edu.org\n    url: https://partners.example-edu.org/support\n  termsOfService: https://partners.example-edu.org/terms\nservers:\n  - url: https://api.example-edu.org/v1\n    description: Production server\n  - url: https://api-staging.example-edu.org/v1\n    description: Staging server\n\npaths:\n  /institution:\n    get:\n      summary: Get institution information\n      description: Returns general institution information (name, address, accreditation)\n      operationId: getInstitutionInfo\n      security:\n        - OAuth2: [institution.read]\n        - ApiKeyAuth: []\n      responses:\n        '200':\n          description: Successful operation\n          content:\n            application/json:\n              schema:\n                \\$ref: '#/components/schemas/Institution'\n        '401':\n          \\$ref: '#/components/responses/Unauthorized'\n        '403':\n          \\$ref: '#/components/responses/Forbidden'\n\n  /programs:\n    get:\n      summary: List academic programs\n      description: Returns a list of academic programs offered by the institution\n      operationId: getPrograms\n      security:\n        - OAuth2: [programs.read]\n        - ApiKeyAuth: []\n      parameters:\n        - name: department\n          in: query\n          description: Filter by department\n          schema:\n            type: string\n        - name: degree\n          in: query\n          description: Filter by degree type (bachelor, master, etc.)\n          schema:\n            type: string\n      responses:\n        '200':\n          description: Successful operation\n          content:\n            application/json:\n              schema:\n                type: array\n                items:\n                  \\$ref: '#/components/schemas/Program'\n        '401':\n          \\$ref: '#/components/responses/Unauthorized'\n        '403':\n          \\$ref: '#/components/responses/Forbidden'\n\n  /programs/{programId}:\n    get:\n      summary: Get program details\n      description: Returns detailed information about a specific program\n      operationId: getProgramById\n      security:\n        - OAuth2: [programs.read]\n        - ApiKeyAuth: []\n      parameters:\n        - name: programId\n          in: path\n          description: ID of the program\n          required: true\n          schema:\n            type: string\n      responses:\n        '200':\n          description: Successful operation\n          content:\n            application/json:\n              schema:\n                \\$ref: '#/components/schemas/Program'\n        '404':\n          \\$ref: '#/components/responses/NotFound'\n        '401':\n          \\$ref: '#/components/responses/Unauthorized'\n        '403':\n          \\$ref: '#/components/responses/Forbidden'\n\n  /courses:\n    get:\n      summary: List courses\n      description: Returns a list of courses offered by the institution\n      operationId: getCourses\n      security:\n        - OAuth2: [courses.read]\n        - ApiKeyAuth: []\n      parameters:\n        - name: programId\n          in: query\n          description: Filter by program ID\n          schema:\n            type: string\n        - name: semester\n          in: query\n          description: Filter by semester (e.g., Fall 2023)\n          schema:\n            type: string\n      responses:\n        '200':\n          description: Successful operation\n          content:\n            application/json:\n              schema:\n                type: array\n                items:\n                  \\$ref: '#/components/schemas/Course'\n        '401':\n          \\$ref: '#/components/responses/Unauthorized'\n        '403':\n          \\$ref: '#/components/responses/Forbidden'\n\n  /students/{studentId}/enrollment:\n    get:\n      summary: Get student enrollment\n      description: Returns a student's enrollment information\n      operationId: getStudentEnrollment\n      security:\n        - OAuth2: [students.read]\n        - ApiKeyAuth: []\n      parameters:\n        - name: studentId\n          in: path\n          description: Encrypted student ID\n          required: true\n          schema:\n            type: string\n      responses:\n        '200':\n          description: Successful operation\n          content:\n            application/json:\n              schema:\n                \\$ref: '#/components/schemas/Enrollment'\n        '401':\n          \\$ref: '#/components/responses/Unauthorized'\n        '403':\n          \\$ref: '#/components/responses/Forbidden'\n        '404':\n          \\$ref: '#/components/responses/NotFound'\n      x-data-sensitivity: high\n      x-requires-consent: true\n\n  /partnership/agreements:\n    get:\n      summary: List partnership agreements\n      description: Returns a list of partnership agreements between institutions\n      operationId: getPartnershipAgreements\n      security:\n        - OAuth2: [partnership.read]\n        - ApiKeyAuth: []\n      responses:\n        '200':\n          description: Successful operation\n          content:\n            application/json:\n              schema:\n                type: array\n                items:\n                  \\$ref: '#/components/schemas/PartnershipAgreement'\n        '401':\n          \\$ref: '#/components/responses/Unauthorized'\n        '403':\n          \\$ref: '#/components/responses/Forbidden'\n\ncomponents:\n  securitySchemes:\n    OAuth2:\n      type: oauth2\n      description: OAuth 2.0 authentication\n      flows:\n        clientCredentials:\n          tokenUrl: https://auth.example-edu.org/token\n          scopes:\n            institution.read: Read institution information\n            programs.read: Read program information\n            courses.read: Read course information\n            students.read: Read student information (requires special approval)\n            partnership.read: Read partnership information\n    ApiKeyAuth:\n      type: apiKey\n      in: header\n      name: X-API-Key\n\n  schemas:\n    Institution:\n      type: object\n      properties:\n        id:\n          type: string\n        name:\n          type: string\n        accreditation:\n          type: array\n          items:\n            type: string\n        address:\n          \\$ref: '#/components/schemas/Address'\n        contact:\n          \\$ref: '#/components/schemas/Contact'\n\n    Address:\n      type: object\n      properties:\n        street:\n          type: string\n        city:\n          type: string\n        state:\n          type: string\n        postalCode:\n          type: string\n        country:\n          type: string\n\n    Contact:\n      type: object\n      properties:\n        phone:\n          type: string\n        email:\n          type: string\n        website:\n          type: string\n\n    Program:\n      type: object\n      properties:\n        id:\n          type: string\n        name:\n          type: string\n        degreeType:\n          type: string\n          enum: [associate, bachelor, master, doctoral, certificate]\n        department:\n          type: string\n        description:\n          type: string\n        credits:\n          type: integer\n        duration:\n          type: string\n          description: Duration in semesters or years\n\n    Course:\n      type: object\n      properties:\n        id:\n          type: string\n        code:\n          type: string\n        name:\n          type: string\n        description:\n          type: string\n        credits:\n          type: integer\n        programId:\n          type: string\n        prerequisites:\n          type: array\n          items:\n            type: string\n\n    Enrollment:\n      type: object\n      properties:\n        studentId:\n          type: string\n          description: Encrypted student identifier\n        programId:\n          type: string\n        status:\n          type: string\n          enum: [active, inactive, graduated, transferred]\n        startDate:\n          type: string\n          format: date\n        expectedGraduationDate:\n          type: string\n          format: date\n        courses:\n          type: array\n          items:\n            \\$ref: '#/components/schemas/EnrolledCourse'\n      x-personally-identifiable: true\n      x-requires-encryption: true\n\n    EnrolledCourse:\n      type: object\n      properties:\n        courseId:\n          type: string\n        semester:\n          type: string\n        status:\n          type: string\n          enum: [enrolled, completed, withdrawn]\n      x-personally-identifiable: true\n      x-requires-encryption: true\n\n    PartnershipAgreement:\n      type: object\n      properties:\n        id:\n          type: string\n        partnerInstitutionId:\n          type: string\n        title:\n          type: string\n        description:\n          type: string\n        startDate:\n          type: string\n          format: date\n        endDate:\n          type: string\n          format: date\n        permissionScopes:\n          type: array\n          items:\n            type: string\n          description: API scopes granted under this partnership\n        dataHandlingRequirements:\n          type: string\n          description: Special data handling requirements under this partnership\n\n  responses:\n    Unauthorized:\n      description: Authentication credentials are missing or invalid\n      content:\n        application/json:\n          schema:\n            \\$ref: '#/components/schemas/Error'\n\n    Forbidden:\n      description: Not authorized to access the resource\n      content:\n        application/json:\n          schema:\n            \\$ref: '#/components/schemas/Error'\n\n    NotFound:\n      description: Resource not found\n      content:\n        application/json:\n          schema:\n            \\$ref: '#/components/schemas/Error'\n\n    Error:\n      type: object\n      properties:\n        code:\n          type: string\n        message:\n          type: string\n        details:\n          type: string\n\nx-api-policies:\n  rateLimit:\n    requestsPerHour: 1000\n  dataRetention:\n    maxDuration: \"30 days\"\n  auditLogging: true\n  dataMinimization: true\n  privacyRegulations:\n    - FERPA\n    - GDPR\n  security:\n    transportEncryption: TLS 1.2+\n    dataEncryption: AES-256\n    accessLogging: true",
+      "order": 0,
+      "published": true,
+      "visibility": "PUBLIC",
+      "updatedAt": "2025-06-18T18:19:36.251Z",
+      "configuration": {},
+      "homepage": true,
+      "excludedAccessControls": false,
+      "accessControls": [],
+      "metadata": {}
+    },
+    {
+      "id": "4a4295db-87af-44e5-8295-db87afd4e5c1",
+      "name": "Aside",
+      "type": "SYSTEM_FOLDER",
+      "order": 0,
+      "published": true,
+      "visibility": "PUBLIC",
+      "updatedAt": "2025-06-18T17:23:33.721Z",
+      "homepage": false,
+      "excludedAccessControls": false,
+      "accessControls": [],
+      "attachedMedia": []
+    }
+  ],
+  "plans": [
+    {
+      "definitionVersion": "V4",
+      "flows": [
+        {
+          "id": "f6ae300c-6320-4310-ae30-0c63202310b4",
+          "enabled": true,
+          "selectors": [
+            {
+              "type": "HTTP",
+              "path": "/",
+              "pathOperator": "STARTS_WITH"
+            }
+          ],
+          "request": [],
+          "response": [],
+          "subscribe": [],
+          "publish": []
+        },
+        {
+          "id": "cafc272a-9428-4f7a-bc27-2a94284f7a0c",
+          "name": "",
+          "enabled": true,
+          "selectors": [
+            {
+              "type": "CONDITION",
+              "condition": ""
+            },
+            {
+              "type": "HTTP",
+              "path": "/courses",
+              "pathOperator": "EQUALS",
+              "methods": [
+                "GET"
+              ]
+            }
+          ],
+          "request": [],
+          "response": [],
+          "subscribe": [],
+          "publish": []
+        },
+        {
+          "id": "01c11e6e-a14f-4683-811e-6ea14f6683cb",
+          "name": "",
+          "enabled": true,
+          "selectors": [
+            {
+              "type": "HTTP",
+              "path": "/students/:studentId/enrollment",
+              "pathOperator": "EQUALS",
+              "methods": [
+                "GET"
+              ]
+            }
+          ],
+          "request": [],
+          "response": [
+            {
+              "name": "Data Logging Masking",
+              "enabled": true,
+              "policy": "policy-data-logging-masking",
+              "configuration": {
+                "scope": "REQUEST_CONTENT",
+                "bodyRules": [
+                  {
+                    "path": "$..[?(@.ssn)]",
+                    "regex": "\\d{3}-\\d{2}-\\d{4}",
+                    "replacer": "XXX-XX-XXXX",
+                    "type": "CUSTOM"
+                  },
+                  {
+                    "path": "$..[?(@.address)]",
+                    "regex": ".*",
+                    "replacer": "[REDACTED]",
+                    "type": "CUSTOM"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "PII Data Filter",
+              "enabled": true,
+              "policy": "groovy",
+              "configuration": {
+                "scope": "REQUEST",
+                "script": "import groovy.json.JsonSlurper\nimport groovy.json.JsonOutput\n\ndef filterPII(def content) {\n    if (content instanceof Map) {\n        content.each { key, value ->\n            def sensitiveFields = ['ssn', 'social', 'socialSecurity', 'social_security',\n                                 'email', 'phone', 'address', 'birthdate', 'dob',\n                                 'password', 'creditCard', 'credit_card', 'license',\n                                 'passport', 'firstName', 'first_name', 'lastName',\n                                 'last_name', 'dateOfBirth', 'date_of_birth']\n            \n            if (sensitiveFields.any { key.toLowerCase().contains(it.toLowerCase()) }) {\n                content[key] = \"[REDACTED]\"\n            } \n            else if (value instanceof Map || value instanceof List) {\n                content[key] = filterPII(value)\n            }\n            else if (value instanceof String) {\n                if (value =~ /[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,6}/) {\n                    content[key] = \"[REDACTED EMAIL]\"\n                }\n                else if (value =~ /\\b\\d{3}[-.]?\\d{2}[-.]?\\d{4}\\b/) {\n                    content[key] = \"[REDACTED SSN]\"\n                }\n                else if (value =~ /\\b(\\+\\d{1,2}\\s?)?\\(?\\d{3}\\)?[\\s.-]?\\d{3}[\\s.-]?\\d{4}\\b/) {\n                    content[key] = \"[REDACTED PHONE]\"\n                }\n                else if (value =~ /\\b\\d{4}[\\s-]?\\d{4}[\\s-]?\\d{4}[\\s-]?\\d{4}\\b/) {\n                    content[key] = \"[REDACTED CREDIT CARD]\"\n                }\n            }\n        }\n    } \n    else if (content instanceof List) {\n        content = content.collect { filterPII(it) }\n    }\n    return content\n}\n\nif (response.content != null && response.headers.'Content-Type'?.contains('application/json')) {\n    try {\n        def jsonSlurper = new JsonSlurper()\n        def content = jsonSlurper.parseText(response.content)\n        content = filterPII(content)\n        response.content = JsonOutput.toJson(content)\n    } catch (Exception e) {\n        logger.error(\"Failed to process JSON content: \" + e.message)\n    }\n}"
+              }
+            }
+          ],
+          "subscribe": [],
+          "publish": []
+        },
+        {
+          "id": "caf4e7d0-7693-4810-b4e7-d076930810a2",
+          "name": "",
+          "enabled": true,
+          "selectors": [
+            {
+              "type": "CONDITION",
+              "condition": ""
+            },
+            {
+              "type": "HTTP",
+              "path": "/partnership/agreements",
+              "pathOperator": "EQUALS",
+              "methods": [
+                "GET"
+              ]
+            }
+          ],
+          "request": [],
+          "response": [],
+          "subscribe": [],
+          "publish": []
+        }
+      ],
+      "id": "b1a3e046-eebb-405b-a3e0-46eebbf05b47",
+      "name": "API Key",
+      "description": "",
+      "apiId": "26e010da-69e7-4047-a010-da69e7604722",
+      "security": {
+        "type": "API_KEY",
+        "configuration": {}
+      },
+      "mode": "STANDARD",
+      "characteristics": [],
+      "commentMessage": "",
+      "commentRequired": false,
+      "createdAt": "2025-06-18T18:36:18.851Z",
+      "excludedGroups": [],
+      "generalConditions": "",
+      "order": 2,
+      "publishedAt": "2025-06-18T18:36:27.79Z",
+      "status": "PUBLISHED",
+      "tags": [],
+      "type": "API",
+      "updatedAt": "2025-06-18T19:01:15.459Z",
+      "validation": "MANUAL"
+    },
+    {
+      "definitionVersion": "V4",
+      "flows": [
+        {
+          "id": "058ad40f-567a-4f91-8ad4-0f567a3f9132",
+          "enabled": true,
+          "selectors": [
+            {
+              "type": "HTTP",
+              "path": "/",
+              "pathOperator": "STARTS_WITH"
+            }
+          ],
+          "request": [],
+          "response": [],
+          "subscribe": [],
+          "publish": []
+        }
+      ],
+      "id": "4e2a719a-452a-4bb4-aa71-9a452aabb4e0",
+      "name": "Keyless",
+      "description": "",
+      "apiId": "26e010da-69e7-4047-a010-da69e7604722",
+      "security": {
+        "type": "KEY_LESS",
+        "configuration": {}
+      },
+      "mode": "STANDARD",
+      "characteristics": [],
+      "commentMessage": "",
+      "commentRequired": false,
+      "createdAt": "2025-06-18T17:23:33.7Z",
+      "excludedGroups": [],
+      "generalConditions": "",
+      "order": 1,
+      "publishedAt": "2025-06-18T17:23:33.7Z",
+      "status": "PUBLISHED",
+      "tags": [],
+      "type": "API",
+      "updatedAt": "2025-06-18T17:34:08.072Z",
+      "validation": "MANUAL"
+    }
+  ],
+  "apiMedia": []
+}
