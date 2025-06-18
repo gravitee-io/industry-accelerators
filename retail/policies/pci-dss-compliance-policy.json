@@ -1,0 +1,404 @@
+{
+  "name": "PCI DSS Compliance Policy",
+  "description": "Payment Card Industry Data Security Standard (PCI DSS) compliance policy for secure payment processing and cardholder data protection",
+  "type": "POLICY",
+  "configuration": {
+    "cardholderDataProtection": {
+      "enabled": true,
+      "dataEncryption": {
+        "enabled": true,
+        "algorithm": "AES-256-GCM",
+        "keyManagement": {
+          "provider": "HSM",
+          "keyRotationDays": 90,
+          "keyDerivationFunction": "PBKDF2"
+        },
+        "encryptInTransit": true,
+        "encryptAtRest": true,
+        "tokenization": {
+          "enabled": true,
+          "tokenFormat": "format_preserving",
+          "detokenizationRestricted": true
+        }
+      },
+      "dataMinimization": {
+        "enabled": true,
+        "retentionPolicy": {
+          "cardNumberRetention": "never",
+          "expiryDateRetention": "business_need_only",
+          "cardholderNameRetention": "business_need_only",
+          "serviceCodeRetention": "never",
+          "authenticationDataRetention": "never"
+        },
+        "dataDiscovery": {
+          "enabled": true,
+          "scanFrequency": "daily",
+          "alertOnDiscovery": true
+        }
+      },
+      "sensitiveDataMasking": {
+        "enabled": true,
+        "maskingRules": [
+          {
+            "dataType": "credit_card_number",
+            "pattern": "\\b(?:4[0-9]{12}(?:[0-9]{3})?|5[1-5][0-9]{14}|3[47][0-9]{13}|3[0-9]{13}|6(?:011|5[0-9]{2})[0-9]{12})\\b",
+            "replacement": "****-****-****-${last4}",
+            "preserveLength": false
+          },
+          {
+            "dataType": "cvv",
+            "pattern": "\\b[0-9]{3,4}\\b",
+            "replacement": "***",
+            "preserveLength": false
+          },
+          {
+            "dataType": "expiry_date",
+            "pattern": "\\b(0[1-9]|1[0-2])\\/([0-9]{2}|[0-9]{4})\\b",
+            "replacement": "**/**",
+            "preserveLength": false
+          }
+        ]
+      }
+    },
+    "accessControl": {
+      "enabled": true,
+      "needToKnow": {
+        "enabled": true,
+        "enforceBusinessJustification": true,
+        "accessApprovalRequired": true,
+        "accessReviewFrequency": "quarterly"
+      },
+      "roleBasedAccess": {
+        "enabled": true,
+        "roles": [
+          {
+            "name": "payment_processor",
+            "permissions": ["process_payments", "view_transaction_status"],
+            "restrictions": {
+              "dataAccess": "payment_processing_only",
+              "timeRestrictions": {
+                "allowedHours": "00:00-23:59",
+                "timezone": "UTC"
+              }
+            }
+          },
+          {
+            "name": "customer_service",
+            "permissions": ["view_masked_card_data", "process_refunds"],
+            "restrictions": {
+              "dataAccess": "masked_data_only",
+              "excludedFields": ["full_card_number", "cvv", "authentication_data"]
+            }
+          },
+          {
+            "name": "finance_team",
+            "permissions": ["view_transaction_reports", "reconcile_payments"],
+            "restrictions": {
+              "dataAccess": "aggregated_data_only",
+              "excludedFields": ["card_number", "cvv", "cardholder_name"]
+            }
+          },
+          {
+            "name": "security_admin",
+            "permissions": ["view_security_logs", "manage_access_controls", "incident_response"],
+            "restrictions": {
+              "dataAccess": "security_metadata_only",
+              "requireMFA": true,
+              "requireApproval": true
+            }
+          }
+        ]
+      },
+      "multiFactorAuthentication": {
+        "enabled": true,
+        "required": true,
+        "methods": ["TOTP", "SMS", "HARDWARE_TOKEN", "BIOMETRIC"],
+        "riskBasedAuthentication": true,
+        "sessionTimeout": 900
+      }
+    },
+    "networkSecurity": {
+      "enabled": true,
+      "networkSegmentation": {
+        "enabled": true,
+        "cardholderDataEnvironment": {
+          "isolated": true,
+          "firewallRules": {
+            "defaultDeny": true,
+            "allowedPorts": [443, 80],
+            "allowedProtocols": ["HTTPS", "TLS"],
+            "sourceIpRestrictions": true
+          }
+        },
+        "dmzConfiguration": {
+          "enabled": true,
+          "webServerIsolation": true,
+          "databaseIsolation": true
+        }
+      },
+      "wirelessSecurity": {
+        "enabled": true,
+        "encryptionRequired": true,
+        "wpaEnterprise": true,
+        "guestNetworkIsolation": true,
+        "regularSecurityScans": true
+      },
+      "vpnSecurity": {
+        "enabled": true,
+        "strongAuthentication": true,
+        "encryptionStandards": ["AES-256", "ChaCha20"],
+        "perfectForwardSecrecy": true
+      }
+    },
+    "vulnerabilityManagement": {
+      "enabled": true,
+      "regularScanning": {
+        "enabled": true,
+        "scanFrequency": "quarterly",
+        "internalScans": true,
+        "externalScans": true,
+        "authenticatedScans": true
+      },
+      "patchManagement": {
+        "enabled": true,
+        "criticalPatchTimeframe": 30,
+        "highPatchTimeframe": 90,
+        "testingRequired": true,
+        "rollbackProcedures": true
+      },
+      "penetrationTesting": {
+        "enabled": true,
+        "frequency": "annually",
+        "scopeIncludes": ["network", "application", "wireless"],
+        "retestingRequired": true
+      }
+    },
+    "secureSystemsDevelopment": {
+      "enabled": true,
+      "secureCodeReview": {
+        "enabled": true,
+        "automatedScanning": true,
+        "manualReview": true,
+        "securityTraining": true
+      },
+      "changeManagement": {
+        "enabled": true,
+        "approvalRequired": true,
+        "testingRequired": true,
+        "rollbackProcedures": true,
+        "documentationRequired": true
+      },
+      "separationOfDuties": {
+        "enabled": true,
+        "developmentProductionSeparation": true,
+        "codeReviewRequired": true,
+        "deploymentApproval": true
+      }
+    },
+    "monitoring": {
+      "enabled": true,
+      "logManagement": {
+        "enabled": true,
+        "centralizedLogging": true,
+        "logRetention": 365,
+        "logIntegrity": {
+          "enabled": true,
+          "digitalSignatures": true,
+          "tamperDetection": true
+        },
+        "loggedEvents": [
+          "user_access_to_cardholder_data",
+          "actions_by_privileged_users",
+          "access_to_audit_trails",
+          "invalid_logical_access_attempts",
+          "use_of_identification_mechanisms",
+          "initialization_of_audit_logs",
+          "creation_deletion_of_system_accounts"
+        ]
+      },
+      "realTimeMonitoring": {
+        "enabled": true,
+        "anomalyDetection": true,
+        "alerting": {
+          "enabled": true,
+          "realTimeAlerts": true,
+          "escalationProcedures": true,
+          "alertThresholds": {
+            "failedLogins": 5,
+            "privilegedAccess": 1,
+            "dataExfiltration": 1,
+            "systemChanges": 1
+          }
+        }
+      },
+      "fileIntegrityMonitoring": {
+        "enabled": true,
+        "criticalFiles": [
+          "payment_application_files",
+          "configuration_files",
+          "content_files",
+          "system_executables",
+          "log_files"
+        ],
+        "changeDetection": true,
+        "alertOnChanges": true
+      }
+    },
+    "incidentResponse": {
+      "enabled": true,
+      "incidentResponsePlan": {
+        "enabled": true,
+        "documentedProcedures": true,
+        "roleAssignments": true,
+        "communicationPlan": true,
+        "regularTesting": true
+      },
+      "forensicProcedures": {
+        "enabled": true,
+        "evidenceCollection": true,
+        "chainOfCustody": true,
+        "forensicAnalysis": true,
+        "legalRequirements": true
+      },
+      "breachNotification": {
+        "enabled": true,
+        "timeframes": {
+          "internalNotification": 24,
+          "cardBrandNotification": 72,
+          "lawEnforcementNotification": 72,
+          "customerNotification": 72
+        },
+        "notificationContent": {
+          "breachDescription": true,
+          "dataInvolved": true,
+          "stepsBeingTaken": true,
+          "contactInformation": true
+        }
+      }
+    },
+    "compliance": {
+      "enabled": true,
+      "pciDssRequirements": {
+        "requirement1": {
+          "description": "Install and maintain a firewall configuration",
+          "implemented": true,
+          "controls": ["firewall_configuration", "network_segmentation", "dmz_implementation"]
+        },
+        "requirement2": {
+          "description": "Do not use vendor-supplied defaults for system passwords",
+          "implemented": true,
+          "controls": ["default_password_changes", "strong_password_policy", "account_management"]
+        },
+        "requirement3": {
+          "description": "Protect stored cardholder data",
+          "implemented": true,
+          "controls": ["data_encryption", "tokenization", "data_retention_policy"]
+        },
+        "requirement4": {
+          "description": "Encrypt transmission of cardholder data",
+          "implemented": true,
+          "controls": ["transmission_encryption", "tls_implementation", "key_management"]
+        },
+        "requirement5": {
+          "description": "Protect all systems against malware",
+          "implemented": true,
+          "controls": ["antivirus_software", "malware_scanning", "system_updates"]
+        },
+        "requirement6": {
+          "description": "Develop and maintain secure systems and applications",
+          "implemented": true,
+          "controls": ["secure_development", "vulnerability_management", "change_control"]
+        },
+        "requirement7": {
+          "description": "Restrict access to cardholder data by business need to know",
+          "implemented": true,
+          "controls": ["access_control", "role_based_access", "need_to_know"]
+        },
+        "requirement8": {
+          "description": "Identify and authenticate access to system components",
+          "implemented": true,
+          "controls": ["user_identification", "authentication_mechanisms", "multi_factor_auth"]
+        },
+        "requirement9": {
+          "description": "Restrict physical access to cardholder data",
+          "implemented": true,
+          "controls": ["physical_security", "access_controls", "visitor_management"]
+        },
+        "requirement10": {
+          "description": "Track and monitor all access to network resources",
+          "implemented": true,
+          "controls": ["audit_logging", "log_monitoring", "log_review"]
+        },
+        "requirement11": {
+          "description": "Regularly test security systems and processes",
+          "implemented": true,
+          "controls": ["vulnerability_scanning", "penetration_testing", "security_testing"]
+        },
+        "requirement12": {
+          "description": "Maintain a policy that addresses information security",
+          "implemented": true,
+          "controls": ["security_policy", "security_awareness", "incident_response"]
+        }
+      },
+      "assessmentSchedule": {
+        "selfAssessment": "annually",
+        "externalAssessment": "annually",
+        "vulnerabilityScans": "quarterly",
+        "penetrationTesting": "annually"
+      },
+      "compensatingControls": {
+        "enabled": true,
+        "documentationRequired": true,
+        "regularReview": true,
+        "approvalRequired": true
+      }
+    },
+    "dataLossPrevention": {
+      "enabled": true,
+      "contentInspection": {
+        "enabled": true,
+        "realTimeScanning": true,
+        "patternMatching": true,
+        "contextualAnalysis": true
+      },
+      "dataClassification": {
+        "enabled": true,
+        "automaticClassification": true,
+        "manualClassification": true,
+        "labelingRequired": true
+      },
+      "dataLeakageDetection": {
+        "enabled": true,
+        "networkMonitoring": true,
+        "endpointMonitoring": true,
+        "cloudMonitoring": true,
+        "alerting": true
+      }
+    },
+    "thirdPartyManagement": {
+      "enabled": true,
+      "vendorAssessment": {
+        "enabled": true,
+        "securityQuestionnaires": true,
+        "onSiteAssessments": true,
+        "certificationValidation": true
+      },
+      "contractualRequirements": {
+        "enabled": true,
+        "pciComplianceRequired": true,
+        "securityStandards": true,
+        "incidentNotification": true,
+        "auditRights": true
+      },
+      "ongoingMonitoring": {
+        "enabled": true,
+        "regularAssessments": true,
+        "performanceMonitoring": true,
+        "complianceValidation": true
+      }
+    }
+  },
+  "enabled": true,
+  "order": 100
+}
+

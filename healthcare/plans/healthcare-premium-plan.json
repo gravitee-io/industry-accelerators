@@ -1,0 +1,481 @@
+{
+  "name": "Healthcare Premium Plan",
+  "description": "Premium API access plan for healthcare organizations with FHIR R4 compliance, HIPAA security, patient consent management, and clinical data exchange capabilities",
+  "type": "OAUTH2",
+  "validation": "AUTO",
+  "characteristics": [],
+  "order": 1,
+  "paths": {},
+  "flows": [
+    {
+      "name": "Healthcare Security and Compliance Flow",
+      "path-operator": {
+        "path": "/",
+        "operator": "STARTS_WITH"
+      },
+      "condition": "",
+      "consumers": [],
+      "methods": [],
+      "pre": [
+        {
+          "name": "rate-limit",
+          "description": "Rate limiting for healthcare APIs with burst protection",
+          "enabled": true,
+          "policy": "rate-limit",
+          "configuration": {
+            "rate": {
+              "limit": 5000,
+              "periodTime": 1,
+              "periodTimeUnit": "HOURS"
+            },
+            "async": false,
+            "addHeaders": true,
+            "key": "oauth2-client-id"
+          }
+        },
+        {
+          "name": "quota",
+          "description": "Monthly quota for premium healthcare plan",
+          "enabled": true,
+          "policy": "quota",
+          "configuration": {
+            "quota": {
+              "limit": 500000,
+              "periodTime": 1,
+              "periodTimeUnit": "MONTHS"
+            },
+            "async": false,
+            "addHeaders": true,
+            "key": "oauth2-client-id"
+          }
+        },
+        {
+          "name": "hipaa-compliance",
+          "description": "HIPAA compliance policy for protected health information",
+          "enabled": true,
+          "policy": "hipaa-compliance-policy",
+          "configuration": {}
+        },
+        {
+          "name": "smart-on-fhir-auth",
+          "description": "SMART on FHIR authentication and authorization",
+          "enabled": true,
+          "policy": "smart-on-fhir-auth-policy",
+          "configuration": {}
+        },
+        {
+          "name": "patient-consent-management",
+          "description": "Patient consent verification and management",
+          "enabled": true,
+          "policy": "patient-consent-management-policy",
+          "configuration": {}
+        },
+        {
+          "name": "fhir-validation",
+          "description": "FHIR R4 resource validation",
+          "enabled": true,
+          "policy": "fhir-validation",
+          "configuration": {
+            "fhirVersion": "R4",
+            "validateRequest": true,
+            "validateResponse": true,
+            "strictValidation": true,
+            "profileValidation": true,
+            "terminologyValidation": true
+          }
+        },
+        {
+          "name": "data-loss-prevention",
+          "description": "Healthcare data loss prevention and PHI protection",
+          "enabled": true,
+          "policy": "data-loss-prevention",
+          "configuration": {
+            "scanContent": true,
+            "phiDetection": {
+              "enabled": true,
+              "patterns": [
+                "ssn",
+                "medical_record_number",
+                "insurance_id",
+                "credit_card",
+                "phone_number",
+                "email_address"
+              ],
+              "action": "mask"
+            },
+            "sensitiveDataHandling": {
+              "enabled": true,
+              "encryptInTransit": true,
+              "encryptAtRest": true,
+              "auditAccess": true
+            }
+          }
+        },
+        {
+          "name": "ip-filtering",
+          "description": "IP whitelist filtering for healthcare networks",
+          "enabled": true,
+          "policy": "ip-filtering",
+          "configuration": {
+            "matchAllFromXForwardedFor": true,
+            "whitelistIps": [
+              "192.168.1.0/24",
+              "10.0.0.0/8"
+            ],
+            "blacklistIps": []
+          }
+        },
+        {
+          "name": "cors",
+          "description": "CORS policy for healthcare web applications",
+          "enabled": true,
+          "policy": "cors",
+          "configuration": {
+            "allowCredentials": true,
+            "allowHeaders": [
+              "Authorization",
+              "Content-Type",
+              "X-Requested-With",
+              "X-FHIR-Starter",
+              "X-Patient-ID",
+              "X-Consent-ID"
+            ],
+            "allowMethods": [
+              "GET",
+              "POST",
+              "PUT",
+              "DELETE",
+              "OPTIONS",
+              "PATCH"
+            ],
+            "allowOrigin": [
+              "https://*.healthcorp.com",
+              "https://localhost:3000"
+            ],
+            "exposeHeaders": [
+              "X-Rate-Limit-Limit",
+              "X-Rate-Limit-Remaining",
+              "X-Rate-Limit-Reset",
+              "Location",
+              "ETag",
+              "Last-Modified"
+            ],
+            "maxAge": 86400,
+            "runPolicies": false
+          }
+        },
+        {
+          "name": "request-validation",
+          "description": "Request validation for FHIR operations",
+          "enabled": true,
+          "policy": "request-validation",
+          "configuration": {
+            "validateRequestBody": true,
+            "validateRequestHeaders": true,
+            "validateRequestParameters": true,
+            "deepCheck": true,
+            "validateUncoveredOperations": false,
+            "customValidation": {
+              "fhirResourceValidation": true,
+              "businessRuleValidation": true
+            }
+          }
+        },
+        {
+          "name": "oauth2",
+          "description": "OAuth 2.0 authentication with SMART on FHIR scopes",
+          "enabled": true,
+          "policy": "oauth2",
+          "configuration": {
+            "oauthResource": "fhir-api-resource",
+            "oauthScopes": [
+              "patient/*.read",
+              "patient/*.write",
+              "patient/Patient.read",
+              "patient/Patient.write",
+              "patient/Observation.read",
+              "patient/Observation.write",
+              "patient/Condition.read",
+              "patient/Condition.write",
+              "patient/MedicationRequest.read",
+              "patient/MedicationRequest.write",
+              "patient/Encounter.read",
+              "patient/Encounter.write",
+              "patient/Consent.read",
+              "patient/Consent.write",
+              "user/*.read",
+              "user/*.write",
+              "user/AuditEvent.read",
+              "system/*.read",
+              "system/*.write"
+            ],
+            "checkRequiredScopes": true,
+            "modeStrict": true,
+            "propagateAuthHeader": true,
+            "extractPayload": true,
+            "smartOnFhir": {
+              "enabled": true,
+              "validateLaunchContext": true,
+              "requirePatientContext": true,
+              "validateUserContext": true
+            }
+          }
+        },
+        {
+          "name": "transform-headers",
+          "description": "Add healthcare-specific headers and tracking",
+          "enabled": true,
+          "policy": "transform-headers",
+          "configuration": {
+            "addHeaders": [
+              {
+                "name": "X-Request-ID",
+                "value": "{#request.id}"
+              },
+              {
+                "name": "X-Timestamp",
+                "value": "{#request.timestamp}"
+              },
+              {
+                "name": "X-FHIR-Version",
+                "value": "R4"
+              },
+              {
+                "name": "X-Patient-Context",
+                "value": "{#context.attributes['patient-id']}"
+              },
+              {
+                "name": "X-User-Context",
+                "value": "{#context.attributes['user-id']}"
+              },
+              {
+                "name": "X-Consent-Status",
+                "value": "{#context.attributes['consent-status']}"
+              }
+            ],
+            "removeHeaders": [
+              "Server",
+              "X-Powered-By",
+              "X-AspNet-Version"
+            ]
+          }
+        }
+      ],
+      "post": [
+        {
+          "name": "response-templates",
+          "description": "FHIR-compliant response templates",
+          "enabled": true,
+          "policy": "response-templates",
+          "configuration": {
+            "templates": [
+              {
+                "statusCode": 400,
+                "headers": {
+                  "Content-Type": "application/fhir+json"
+                },
+                "body": "{\n  \"resourceType\": \"OperationOutcome\",\n  \"id\": \"{#request.id}\",\n  \"meta\": {\n    \"lastUpdated\": \"{#request.timestamp}\"\n  },\n  \"issue\": [\n    {\n      \"severity\": \"error\",\n      \"code\": \"invalid\",\n      \"details\": {\n        \"text\": \"Invalid request: {#context.attributes['validation-error']}\"\n      },\n      \"diagnostics\": \"{#context.attributes['validation-details']}\"\n    }\n  ]\n}"
+              },
+              {
+                "statusCode": 401,
+                "headers": {
+                  "Content-Type": "application/fhir+json",
+                  "WWW-Authenticate": "Bearer realm=\"FHIR API\", error=\"invalid_token\""
+                },
+                "body": "{\n  \"resourceType\": \"OperationOutcome\",\n  \"id\": \"{#request.id}\",\n  \"meta\": {\n    \"lastUpdated\": \"{#request.timestamp}\"\n  },\n  \"issue\": [\n    {\n      \"severity\": \"error\",\n      \"code\": \"login\",\n      \"details\": {\n        \"text\": \"Authentication required\"\n      },\n      \"diagnostics\": \"Valid OAuth 2.0 token with appropriate SMART on FHIR scopes required\"\n    }\n  ]\n}"
+              },
+              {
+                "statusCode": 403,
+                "headers": {
+                  "Content-Type": "application/fhir+json"
+                },
+                "body": "{\n  \"resourceType\": \"OperationOutcome\",\n  \"id\": \"{#request.id}\",\n  \"meta\": {\n    \"lastUpdated\": \"{#request.timestamp}\"\n  },\n  \"issue\": [\n    {\n      \"severity\": \"error\",\n      \"code\": \"forbidden\",\n      \"details\": {\n        \"text\": \"Access denied: {#context.attributes['access-denial-reason']}\"\n      },\n      \"diagnostics\": \"Insufficient permissions or missing patient consent\"\n    }\n  ]\n}"
+              },
+              {
+                "statusCode": 404,
+                "headers": {
+                  "Content-Type": "application/fhir+json"
+                },
+                "body": "{\n  \"resourceType\": \"OperationOutcome\",\n  \"id\": \"{#request.id}\",\n  \"meta\": {\n    \"lastUpdated\": \"{#request.timestamp}\"\n  },\n  \"issue\": [\n    {\n      \"severity\": \"error\",\n      \"code\": \"not-found\",\n      \"details\": {\n        \"text\": \"Resource not found\"\n      },\n      \"diagnostics\": \"The requested {#context.attributes['resource-type']} resource with ID {#context.attributes['resource-id']} was not found\"\n    }\n  ]\n}"
+              },
+              {
+                "statusCode": 422,
+                "headers": {
+                  "Content-Type": "application/fhir+json"
+                },
+                "body": "{\n  \"resourceType\": \"OperationOutcome\",\n  \"id\": \"{#request.id}\",\n  \"meta\": {\n    \"lastUpdated\": \"{#request.timestamp}\"\n  },\n  \"issue\": [\n    {\n      \"severity\": \"error\",\n      \"code\": \"processing\",\n      \"details\": {\n        \"text\": \"FHIR validation failed\"\n      },\n      \"diagnostics\": \"{#context.attributes['fhir-validation-error']}\",\n      \"expression\": [\"{#context.attributes['fhir-validation-path']}\"]\n    }\n  ]\n}"
+              },
+              {
+                "statusCode": 429,
+                "headers": {
+                  "Content-Type": "application/fhir+json",
+                  "Retry-After": "{#context.attributes['retry-after']}"
+                },
+                "body": "{\n  \"resourceType\": \"OperationOutcome\",\n  \"id\": \"{#request.id}\",\n  \"meta\": {\n    \"lastUpdated\": \"{#request.timestamp}\"\n  },\n  \"issue\": [\n    {\n      \"severity\": \"error\",\n      \"code\": \"throttled\",\n      \"details\": {\n        \"text\": \"Rate limit exceeded\"\n      },\n      \"diagnostics\": \"Request rate limit exceeded. Retry after {#context.attributes['retry-after']} seconds\"\n    }\n  ]\n}"
+              },
+              {
+                "statusCode": 500,
+                "headers": {
+                  "Content-Type": "application/fhir+json"
+                },
+                "body": "{\n  \"resourceType\": \"OperationOutcome\",\n  \"id\": \"{#request.id}\",\n  \"meta\": {\n    \"lastUpdated\": \"{#request.timestamp}\"\n  },\n  \"issue\": [\n    {\n      \"severity\": \"error\",\n      \"code\": \"exception\",\n      \"details\": {\n        \"text\": \"Internal server error\"\n      },\n      \"diagnostics\": \"An internal error occurred. Contact support with incident ID: {#context.attributes['incident-id']}\"\n    }\n  ]\n}"
+              }
+            ]
+          }
+        },
+        {
+          "name": "audit-logging",
+          "description": "HIPAA-compliant audit logging",
+          "enabled": true,
+          "policy": "audit-logging",
+          "configuration": {
+            "auditEvents": [
+              "data_access",
+              "data_modification",
+              "authentication",
+              "authorization",
+              "consent_verification",
+              "phi_access"
+            ],
+            "auditDetails": {
+              "includeRequestDetails": true,
+              "includeResponseDetails": false,
+              "includeUserContext": true,
+              "includePatientContext": true,
+              "includeConsentContext": true
+            },
+            "auditDestination": {
+              "type": "syslog",
+              "endpoint": "audit.healthcorp.com:514",
+              "format": "fhir_audit_event"
+            }
+          }
+        },
+        {
+          "name": "transform-headers",
+          "description": "Add FHIR and security response headers",
+          "enabled": true,
+          "policy": "transform-headers",
+          "configuration": {
+            "addHeaders": [
+              {
+                "name": "X-Content-Type-Options",
+                "value": "nosniff"
+              },
+              {
+                "name": "X-Frame-Options",
+                "value": "DENY"
+              },
+              {
+                "name": "X-XSS-Protection",
+                "value": "1; mode=block"
+              },
+              {
+                "name": "Strict-Transport-Security",
+                "value": "max-age=31536000; includeSubDomains"
+              },
+              {
+                "name": "Cache-Control",
+                "value": "no-store, no-cache, must-revalidate, private"
+              },
+              {
+                "name": "X-Request-ID",
+                "value": "{#request.id}"
+              },
+              {
+                "name": "X-Response-Time",
+                "value": "{#context.attributes['response-time']}"
+              },
+              {
+                "name": "X-FHIR-Version",
+                "value": "R4"
+              },
+              {
+                "name": "X-Audit-ID",
+                "value": "{#context.attributes['audit-id']}"
+              }
+            ]
+          }
+        },
+        {
+          "name": "metrics",
+          "description": "Healthcare-specific metrics collection",
+          "enabled": true,
+          "policy": "metrics",
+          "configuration": {
+            "labels": [
+              {
+                "key": "api_name",
+                "value": "healthcare-fhir-api"
+              },
+              {
+                "key": "plan_name",
+                "value": "healthcare-premium"
+              },
+              {
+                "key": "fhir_resource",
+                "value": "{#context.attributes['fhir-resource-type']}"
+              },
+              {
+                "key": "patient_id",
+                "value": "{#context.attributes['patient-id']}"
+              },
+              {
+                "key": "user_type",
+                "value": "{#context.attributes['user-type']}"
+              },
+              {
+                "key": "consent_status",
+                "value": "{#context.attributes['consent-status']}"
+              },
+              {
+                "key": "endpoint",
+                "value": "{#request.pathInfo}"
+              },
+              {
+                "key": "method",
+                "value": "{#request.method}"
+              }
+            ]
+          }
+        }
+      ],
+      "enabled": true
+    }
+  ],
+  "securityDefinition": "OAUTH2",
+  "security": {
+    "config": {
+      "authorizationServerUrl": "https://auth.healthcorp.com",
+      "introspectionEndpoint": "https://auth.healthcorp.com/oauth2/introspect",
+      "userInfoEndpoint": "https://auth.healthcorp.com/oauth2/userinfo",
+      "scopeSeparator": " ",
+      "useSystemProxy": false,
+      "introspectionEndpointMethod": "POST",
+      "userInfoEndpointMethod": "GET",
+      "clientAuthenticationMethod": "client_secret_basic",
+      "tokenTypeHint": "access_token"
+    }
+  },
+  "tags": [
+    "healthcare",
+    "fhir",
+    "hipaa",
+    "premium",
+    "smart-on-fhir",
+    "patient-consent"
+  ],
+  "selection_rule": "",
+  "comment_required": false,
+  "comment_message": "",
+  "general_conditions": [
+    "Organization must be a covered entity under HIPAA",
+    "SMART on FHIR client registration required",
+    "Patient consent management system integration required",
+    "HIPAA Business Associate Agreement must be executed",
+    "Audit logging and monitoring capabilities must be implemented",
+    "Data encryption in transit and at rest required",
+    "Regular security assessments and compliance audits required"
+  ]
+}
+

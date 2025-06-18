@@ -1,0 +1,296 @@
+{
+  "name": "SMART on FHIR Authentication Policy",
+  "description": "SMART on FHIR OAuth 2.0 authentication and authorization policy implementing healthcare-specific security requirements",
+  "type": "POLICY",
+  "configuration": {
+    "smartOnFhir": {
+      "enabled": true,
+      "version": "2.0",
+      "conformanceStatement": {
+        "enabled": true,
+        "endpoint": "/.well-known/smart-configuration",
+        "capabilities": [
+          "launch-ehr",
+          "launch-standalone",
+          "client-public",
+          "client-confidential-symmetric",
+          "sso-openid-connect",
+          "context-passthrough-banner",
+          "context-passthrough-style",
+          "context-ehr-patient",
+          "context-ehr-encounter",
+          "context-standalone-patient",
+          "context-standalone-encounter",
+          "permission-offline",
+          "permission-patient",
+          "permission-user"
+        ]
+      }
+    },
+    "oauth2": {
+      "enabled": true,
+      "authorizationEndpoint": "https://auth.healthcare.com/oauth2/authorize",
+      "tokenEndpoint": "https://auth.healthcare.com/oauth2/token",
+      "introspectionEndpoint": "https://auth.healthcare.com/oauth2/introspect",
+      "jwksUri": "https://auth.healthcare.com/.well-known/jwks.json",
+      "issuer": "https://auth.healthcare.com",
+      "supportedGrantTypes": [
+        "authorization_code",
+        "client_credentials",
+        "refresh_token"
+      ],
+      "supportedResponseTypes": [
+        "code"
+      ],
+      "supportedScopes": [
+        "openid",
+        "profile",
+        "fhirUser",
+        "launch",
+        "launch/patient",
+        "launch/encounter",
+        "patient/*.read",
+        "patient/*.write",
+        "patient/Patient.read",
+        "patient/Patient.write",
+        "patient/Observation.read",
+        "patient/Condition.read",
+        "patient/MedicationRequest.read",
+        "patient/DiagnosticReport.read",
+        "patient/Immunization.read",
+        "patient/AllergyIntolerance.read",
+        "patient/CarePlan.read",
+        "patient/Goal.read",
+        "patient/Procedure.read",
+        "patient/DocumentReference.read",
+        "user/*.read",
+        "user/*.write",
+        "user/Patient.read",
+        "user/Practitioner.read",
+        "user/Organization.read",
+        "offline_access"
+      ]
+    },
+    "pkce": {
+      "enabled": true,
+      "required": true,
+      "codeChallengeMethod": ["S256"],
+      "minCodeVerifierLength": 43,
+      "maxCodeVerifierLength": 128
+    },
+    "clientAuthentication": {
+      "enabled": true,
+      "supportedMethods": [
+        "client_secret_basic",
+        "client_secret_post",
+        "private_key_jwt",
+        "client_secret_jwt"
+      ],
+      "requireClientAuthentication": true,
+      "publicClientSupport": {
+        "enabled": true,
+        "requirePKCE": true,
+        "allowedRedirectUris": [
+          "https://app.healthcare.com/callback",
+          "https://mobile.healthcare.com/callback",
+          "com.healthcare.app://callback"
+        ]
+      }
+    },
+    "contextualLaunch": {
+      "enabled": true,
+      "ehrLaunch": {
+        "enabled": true,
+        "launchParameter": "launch",
+        "contextValidation": {
+          "enabled": true,
+          "validatePatientContext": true,
+          "validateEncounterContext": true,
+          "validateUserContext": true
+        }
+      },
+      "standaloneLaunch": {
+        "enabled": true,
+        "patientSelection": {
+          "enabled": true,
+          "allowPatientSearch": true,
+          "requirePatientConsent": true
+        }
+      }
+    },
+    "scopeValidation": {
+      "enabled": true,
+      "enforceMinimalScopes": true,
+      "scopeMapping": {
+        "patient/*.read": {
+          "description": "Read access to all patient data",
+          "resources": ["*"],
+          "actions": ["read", "search"]
+        },
+        "patient/Patient.read": {
+          "description": "Read access to Patient resources",
+          "resources": ["Patient"],
+          "actions": ["read", "search"]
+        },
+        "user/*.read": {
+          "description": "Read access to all data for authenticated user",
+          "resources": ["*"],
+          "actions": ["read", "search"],
+          "requiresUserContext": true
+        }
+      },
+      "dynamicScopes": {
+        "enabled": true,
+        "allowScopeDowngrade": true,
+        "requireUserConsent": true
+      }
+    },
+    "tokenManagement": {
+      "enabled": true,
+      "accessTokenLifetime": 3600,
+      "refreshTokenLifetime": 86400,
+      "idTokenLifetime": 3600,
+      "tokenFormat": "JWT",
+      "includeAudience": true,
+      "includePatientContext": true,
+      "includeUserContext": true,
+      "tokenBinding": {
+        "enabled": true,
+        "bindToClientCertificate": false,
+        "bindToDeviceFingerprint": true
+      }
+    },
+    "userAuthentication": {
+      "enabled": true,
+      "multiFactorAuthentication": {
+        "enabled": true,
+        "required": true,
+        "methods": ["TOTP", "SMS", "PUSH", "BIOMETRIC"],
+        "riskBasedAuthentication": true
+      },
+      "singleSignOn": {
+        "enabled": true,
+        "protocol": "SAML2",
+        "idpMetadata": "https://idp.healthcare.com/metadata",
+        "attributeMapping": {
+          "userId": "NameID",
+          "email": "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress",
+          "name": "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name",
+          "role": "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"
+        }
+      }
+    },
+    "patientMatching": {
+      "enabled": true,
+      "matchingAlgorithm": "DETERMINISTIC",
+      "matchingCriteria": [
+        {
+          "field": "identifier",
+          "weight": 1.0,
+          "required": false
+        },
+        {
+          "field": "name",
+          "weight": 0.8,
+          "required": true
+        },
+        {
+          "field": "birthDate",
+          "weight": 0.9,
+          "required": true
+        },
+        {
+          "field": "gender",
+          "weight": 0.3,
+          "required": false
+        }
+      ],
+      "minimumMatchScore": 0.8,
+      "allowMultipleMatches": false
+    },
+    "auditLogging": {
+      "enabled": true,
+      "logAuthenticationEvents": true,
+      "logAuthorizationDecisions": true,
+      "logTokenIssuance": true,
+      "logScopeGrants": true,
+      "logPatientAccess": true,
+      "auditFields": [
+        "timestamp",
+        "client_id",
+        "user_id",
+        "patient_id",
+        "scopes_requested",
+        "scopes_granted",
+        "authentication_method",
+        "ip_address",
+        "user_agent",
+        "outcome"
+      ]
+    },
+    "security": {
+      "enabled": true,
+      "rateLimiting": {
+        "enabled": true,
+        "limits": [
+          {
+            "key": "client_id",
+            "limit": 100,
+            "periodTime": 3600,
+            "periodTimeUnit": "SECONDS"
+          },
+          {
+            "key": "ip",
+            "limit": 50,
+            "periodTime": 300,
+            "periodTimeUnit": "SECONDS"
+          }
+        ]
+      },
+      "bruteForceProtection": {
+        "enabled": true,
+        "maxFailedAttempts": 5,
+        "lockoutDuration": 900,
+        "progressiveLockout": true
+      },
+      "sessionManagement": {
+        "enabled": true,
+        "sessionTimeout": 1800,
+        "concurrentSessionLimit": 3,
+        "sessionFixationProtection": true
+      }
+    },
+    "compliance": {
+      "enabled": true,
+      "smartOnFhirCompliance": {
+        "version": "2.0",
+        "implementedCapabilities": [
+          "launch-ehr",
+          "launch-standalone",
+          "client-public",
+          "client-confidential-symmetric",
+          "sso-openid-connect",
+          "context-ehr-patient",
+          "context-standalone-patient",
+          "permission-offline",
+          "permission-patient",
+          "permission-user"
+        ]
+      },
+      "oauth2Compliance": {
+        "rfc6749": true,
+        "rfc7636": true,
+        "rfc7662": true,
+        "rfc8414": true
+      },
+      "openIdConnectCompliance": {
+        "core": true,
+        "discovery": true,
+        "dynamicRegistration": false
+      }
+    }
+  },
+  "enabled": true,
+  "order": 200
+}
+

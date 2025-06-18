@@ -1,0 +1,1878 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Electronic Health Records (EHR) API",
+    "description": "FHIR R4 compliant Electronic Health Records API with HIPAA compliance, SMART on FHIR authentication, and comprehensive patient data management capabilities",
+    "version": "4.0.1",
+    "contact": {
+      "name": "EHR API Support",
+      "email": "fhir-support@healthcorp.com",
+      "url": "https://developer.healthcorp.com/support"
+    },
+    "license": {
+      "name": "Apache 2.0",
+      "url": "https://www.apache.org/licenses/LICENSE-2.0.html"
+    },
+    "termsOfService": "https://healthcorp.com/terms-of-service"
+  },
+  "servers": [
+    {
+      "url": "https://fhir.healthcorp.com/R4",
+      "description": "Production FHIR R4 Server"
+    },
+    {
+      "url": "https://sandbox-fhir.healthcorp.com/R4",
+      "description": "Sandbox FHIR R4 Server"
+    }
+  ],
+  "security": [
+    {
+      "smart_on_fhir": [
+        "patient/*.read",
+        "patient/*.write",
+        "user/*.read",
+        "user/*.write"
+      ]
+    }
+  ],
+  "paths": {
+    "/Patient": {
+      "get": {
+        "summary": "Search Patients",
+        "description": "Search for Patient resources using FHIR search parameters with HIPAA-compliant access controls",
+        "operationId": "searchPatients",
+        "parameters": [
+          {
+            "name": "_id",
+            "in": "query",
+            "description": "Patient logical ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "identifier",
+            "in": "query",
+            "description": "Patient identifier (MRN, SSN, etc.)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "name",
+            "in": "query",
+            "description": "Patient name (family and/or given)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "family",
+            "in": "query",
+            "description": "Patient family name",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "given",
+            "in": "query",
+            "description": "Patient given name",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "birthdate",
+            "in": "query",
+            "description": "Patient birth date",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "gender",
+            "in": "query",
+            "description": "Patient gender",
+            "schema": {
+              "type": "string",
+              "enum": ["male", "female", "other", "unknown"]
+            }
+          },
+          {
+            "name": "phone",
+            "in": "query",
+            "description": "Patient phone number",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "email",
+            "in": "query",
+            "description": "Patient email address",
+            "schema": {
+              "type": "string",
+              "format": "email"
+            }
+          },
+          {
+            "name": "address",
+            "in": "query",
+            "description": "Patient address",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "address-city",
+            "in": "query",
+            "description": "Patient address city",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "address-state",
+            "in": "query",
+            "description": "Patient address state",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "address-postalcode",
+            "in": "query",
+            "description": "Patient address postal code",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "_count",
+            "in": "query",
+            "description": "Number of results to return",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 200,
+              "default": 20
+            }
+          },
+          {
+            "name": "_offset",
+            "in": "query",
+            "description": "Offset for pagination",
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Search results",
+            "content": {
+              "application/fhir+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Bundle"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "security": [
+          {
+            "smart_on_fhir": ["patient/*.read", "user/Patient.read"]
+          }
+        ]
+      },
+      "post": {
+        "summary": "Create Patient",
+        "description": "Create a new Patient resource with HIPAA compliance validation",
+        "operationId": "createPatient",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/fhir+json": {
+              "schema": {
+                "$ref": "#/components/schemas/Patient"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Patient created successfully",
+            "headers": {
+              "Location": {
+                "description": "URL of the created Patient resource",
+                "schema": {
+                  "type": "string",
+                  "format": "uri"
+                }
+              }
+            },
+            "content": {
+              "application/fhir+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Patient"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "security": [
+          {
+            "smart_on_fhir": ["patient/*.write", "user/Patient.write"]
+          }
+        ]
+      }
+    },
+    "/Patient/{id}": {
+      "get": {
+        "summary": "Read Patient",
+        "description": "Read a specific Patient resource by ID with consent verification",
+        "operationId": "readPatient",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Patient resource ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Patient resource",
+            "content": {
+              "application/fhir+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Patient"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "security": [
+          {
+            "smart_on_fhir": ["patient/*.read", "user/Patient.read"]
+          }
+        ]
+      },
+      "put": {
+        "summary": "Update Patient",
+        "description": "Update an existing Patient resource with audit logging",
+        "operationId": "updatePatient",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Patient resource ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/fhir+json": {
+              "schema": {
+                "$ref": "#/components/schemas/Patient"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Patient updated successfully",
+            "content": {
+              "application/fhir+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Patient"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "security": [
+          {
+            "smart_on_fhir": ["patient/*.write", "user/Patient.write"]
+          }
+        ]
+      }
+    },
+    "/Observation": {
+      "get": {
+        "summary": "Search Observations",
+        "description": "Search for Observation resources (lab results, vital signs, etc.)",
+        "operationId": "searchObservations",
+        "parameters": [
+          {
+            "name": "patient",
+            "in": "query",
+            "description": "Patient reference",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "description": "Observation category",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "code",
+            "in": "query",
+            "description": "Observation code (LOINC, SNOMED, etc.)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "date",
+            "in": "query",
+            "description": "Observation date",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "description": "Observation status",
+            "schema": {
+              "type": "string",
+              "enum": ["registered", "preliminary", "final", "amended", "corrected", "cancelled", "entered-in-error", "unknown"]
+            }
+          },
+          {
+            "name": "_count",
+            "in": "query",
+            "description": "Number of results to return",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 200,
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Search results",
+            "content": {
+              "application/fhir+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Bundle"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "security": [
+          {
+            "smart_on_fhir": ["patient/Observation.read", "user/Observation.read"]
+          }
+        ]
+      },
+      "post": {
+        "summary": "Create Observation",
+        "description": "Create a new Observation resource",
+        "operationId": "createObservation",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/fhir+json": {
+              "schema": {
+                "$ref": "#/components/schemas/Observation"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Observation created successfully",
+            "headers": {
+              "Location": {
+                "description": "URL of the created Observation resource",
+                "schema": {
+                  "type": "string",
+                  "format": "uri"
+                }
+              }
+            },
+            "content": {
+              "application/fhir+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Observation"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "security": [
+          {
+            "smart_on_fhir": ["patient/Observation.write", "user/Observation.write"]
+          }
+        ]
+      }
+    },
+    "/Condition": {
+      "get": {
+        "summary": "Search Conditions",
+        "description": "Search for Condition resources (diagnoses, problems, etc.)",
+        "operationId": "searchConditions",
+        "parameters": [
+          {
+            "name": "patient",
+            "in": "query",
+            "description": "Patient reference",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "description": "Condition category",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "code",
+            "in": "query",
+            "description": "Condition code (ICD-10, SNOMED, etc.)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "clinical-status",
+            "in": "query",
+            "description": "Clinical status of the condition",
+            "schema": {
+              "type": "string",
+              "enum": ["active", "recurrence", "relapse", "inactive", "remission", "resolved"]
+            }
+          },
+          {
+            "name": "verification-status",
+            "in": "query",
+            "description": "Verification status of the condition",
+            "schema": {
+              "type": "string",
+              "enum": ["unconfirmed", "provisional", "differential", "confirmed", "refuted", "entered-in-error"]
+            }
+          },
+          {
+            "name": "onset-date",
+            "in": "query",
+            "description": "Condition onset date",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Search results",
+            "content": {
+              "application/fhir+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Bundle"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "security": [
+          {
+            "smart_on_fhir": ["patient/Condition.read", "user/Condition.read"]
+          }
+        ]
+      }
+    },
+    "/MedicationRequest": {
+      "get": {
+        "summary": "Search Medication Requests",
+        "description": "Search for MedicationRequest resources (prescriptions)",
+        "operationId": "searchMedicationRequests",
+        "parameters": [
+          {
+            "name": "patient",
+            "in": "query",
+            "description": "Patient reference",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "medication",
+            "in": "query",
+            "description": "Medication reference or code",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "description": "Medication request status",
+            "schema": {
+              "type": "string",
+              "enum": ["active", "on-hold", "cancelled", "completed", "entered-in-error", "stopped", "draft", "unknown"]
+            }
+          },
+          {
+            "name": "intent",
+            "in": "query",
+            "description": "Medication request intent",
+            "schema": {
+              "type": "string",
+              "enum": ["proposal", "plan", "order", "original-order", "reflex-order", "filler-order", "instance-order", "option"]
+            }
+          },
+          {
+            "name": "authoredon",
+            "in": "query",
+            "description": "Date medication request was authored",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Search results",
+            "content": {
+              "application/fhir+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Bundle"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "security": [
+          {
+            "smart_on_fhir": ["patient/MedicationRequest.read", "user/MedicationRequest.read"]
+          }
+        ]
+      }
+    },
+    "/Encounter": {
+      "get": {
+        "summary": "Search Encounters",
+        "description": "Search for Encounter resources (visits, admissions, etc.)",
+        "operationId": "searchEncounters",
+        "parameters": [
+          {
+            "name": "patient",
+            "in": "query",
+            "description": "Patient reference",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "class",
+            "in": "query",
+            "description": "Encounter class",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "description": "Encounter status",
+            "schema": {
+              "type": "string",
+              "enum": ["planned", "arrived", "triaged", "in-progress", "onleave", "finished", "cancelled", "entered-in-error", "unknown"]
+            }
+          },
+          {
+            "name": "date",
+            "in": "query",
+            "description": "Encounter date",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "description": "Encounter type",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Search results",
+            "content": {
+              "application/fhir+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Bundle"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "security": [
+          {
+            "smart_on_fhir": ["patient/Encounter.read", "user/Encounter.read"]
+          }
+        ]
+      }
+    },
+    "/Consent": {
+      "get": {
+        "summary": "Search Consent Records",
+        "description": "Search for Consent resources for patient data sharing",
+        "operationId": "searchConsents",
+        "parameters": [
+          {
+            "name": "patient",
+            "in": "query",
+            "description": "Patient reference",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "description": "Consent status",
+            "schema": {
+              "type": "string",
+              "enum": ["draft", "proposed", "active", "rejected", "inactive", "entered-in-error"]
+            }
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "description": "Consent category",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "purpose",
+            "in": "query",
+            "description": "Consent purpose",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Search results",
+            "content": {
+              "application/fhir+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Bundle"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "security": [
+          {
+            "smart_on_fhir": ["patient/Consent.read", "user/Consent.read"]
+          }
+        ]
+      },
+      "post": {
+        "summary": "Create Consent",
+        "description": "Create a new Consent resource for patient data sharing",
+        "operationId": "createConsent",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/fhir+json": {
+              "schema": {
+                "$ref": "#/components/schemas/Consent"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Consent created successfully",
+            "headers": {
+              "Location": {
+                "description": "URL of the created Consent resource",
+                "schema": {
+                  "type": "string",
+                  "format": "uri"
+                }
+              }
+            },
+            "content": {
+              "application/fhir+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Consent"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "security": [
+          {
+            "smart_on_fhir": ["patient/Consent.write", "user/Consent.write"]
+          }
+        ]
+      }
+    },
+    "/AuditEvent": {
+      "get": {
+        "summary": "Search Audit Events",
+        "description": "Search for AuditEvent resources for HIPAA compliance tracking",
+        "operationId": "searchAuditEvents",
+        "parameters": [
+          {
+            "name": "patient",
+            "in": "query",
+            "description": "Patient reference",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "agent",
+            "in": "query",
+            "description": "Agent (user) reference",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "date",
+            "in": "query",
+            "description": "Audit event date",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "action",
+            "in": "query",
+            "description": "Audit event action",
+            "schema": {
+              "type": "string",
+              "enum": ["C", "R", "U", "D", "E"]
+            }
+          },
+          {
+            "name": "outcome",
+            "in": "query",
+            "description": "Audit event outcome",
+            "schema": {
+              "type": "string",
+              "enum": ["0", "4", "8", "12"]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Search results",
+            "content": {
+              "application/fhir+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Bundle"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "security": [
+          {
+            "smart_on_fhir": ["user/AuditEvent.read"]
+          }
+        ]
+      }
+    },
+    "/$export": {
+      "get": {
+        "summary": "Bulk Data Export",
+        "description": "Bulk export of patient data for research and analytics",
+        "operationId": "bulkExport",
+        "parameters": [
+          {
+            "name": "_type",
+            "in": "query",
+            "description": "Resource types to export",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "_since",
+            "in": "query",
+            "description": "Export data since this date",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "_typeFilter",
+            "in": "query",
+            "description": "FHIR search parameters to filter exported data",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Export request accepted",
+            "headers": {
+              "Content-Location": {
+                "description": "URL to check export status",
+                "schema": {
+                  "type": "string",
+                  "format": "uri"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "security": [
+          {
+            "smart_on_fhir": ["system/*.read"]
+          }
+        ]
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "smart_on_fhir": {
+        "type": "oauth2",
+        "description": "SMART on FHIR OAuth 2.0 authentication with healthcare-specific scopes",
+        "flows": {
+          "authorizationCode": {
+            "authorizationUrl": "https://auth.healthcorp.com/oauth2/authorize",
+            "tokenUrl": "https://auth.healthcorp.com/oauth2/token",
+            "scopes": {
+              "patient/*.read": "Read access to all patient data",
+              "patient/*.write": "Write access to all patient data",
+              "patient/Patient.read": "Read access to Patient resources",
+              "patient/Patient.write": "Write access to Patient resources",
+              "patient/Observation.read": "Read access to Observation resources",
+              "patient/Observation.write": "Write access to Observation resources",
+              "patient/Condition.read": "Read access to Condition resources",
+              "patient/Condition.write": "Write access to Condition resources",
+              "patient/MedicationRequest.read": "Read access to MedicationRequest resources",
+              "patient/MedicationRequest.write": "Write access to MedicationRequest resources",
+              "patient/Encounter.read": "Read access to Encounter resources",
+              "patient/Encounter.write": "Write access to Encounter resources",
+              "patient/Consent.read": "Read access to Consent resources",
+              "patient/Consent.write": "Write access to Consent resources",
+              "user/*.read": "Read access to all resources for authenticated user",
+              "user/*.write": "Write access to all resources for authenticated user",
+              "user/Patient.read": "Read access to Patient resources for authenticated user",
+              "user/Patient.write": "Write access to Patient resources for authenticated user",
+              "user/AuditEvent.read": "Read access to AuditEvent resources",
+              "system/*.read": "System-level read access for bulk operations",
+              "system/*.write": "System-level write access for bulk operations"
+            }
+          }
+        }
+      }
+    },
+    "schemas": {
+      "Bundle": {
+        "type": "object",
+        "description": "FHIR Bundle resource for search results and transactions",
+        "properties": {
+          "resourceType": {
+            "type": "string",
+            "enum": ["Bundle"]
+          },
+          "id": {
+            "type": "string",
+            "description": "Bundle logical ID"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/Meta"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["document", "message", "transaction", "transaction-response", "batch", "batch-response", "history", "searchset", "collection"]
+          },
+          "total": {
+            "type": "integer",
+            "description": "Total number of matching resources"
+          },
+          "link": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BundleLink"
+            }
+          },
+          "entry": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BundleEntry"
+            }
+          }
+        },
+        "required": ["resourceType", "type"]
+      },
+      "BundleLink": {
+        "type": "object",
+        "properties": {
+          "relation": {
+            "type": "string",
+            "enum": ["self", "first", "previous", "next", "last"]
+          },
+          "url": {
+            "type": "string",
+            "format": "uri"
+          }
+        },
+        "required": ["relation", "url"]
+      },
+      "BundleEntry": {
+        "type": "object",
+        "properties": {
+          "fullUrl": {
+            "type": "string",
+            "format": "uri"
+          },
+          "resource": {
+            "type": "object",
+            "description": "FHIR resource"
+          },
+          "search": {
+            "$ref": "#/components/schemas/BundleEntrySearch"
+          }
+        }
+      },
+      "BundleEntrySearch": {
+        "type": "object",
+        "properties": {
+          "mode": {
+            "type": "string",
+            "enum": ["match", "include", "outcome"]
+          },
+          "score": {
+            "type": "number"
+          }
+        }
+      },
+      "Patient": {
+        "type": "object",
+        "description": "FHIR Patient resource",
+        "properties": {
+          "resourceType": {
+            "type": "string",
+            "enum": ["Patient"]
+          },
+          "id": {
+            "type": "string",
+            "description": "Patient logical ID"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/Meta"
+          },
+          "identifier": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Identifier"
+            }
+          },
+          "active": {
+            "type": "boolean",
+            "description": "Whether patient record is active"
+          },
+          "name": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/HumanName"
+            }
+          },
+          "telecom": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ContactPoint"
+            }
+          },
+          "gender": {
+            "type": "string",
+            "enum": ["male", "female", "other", "unknown"]
+          },
+          "birthDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "address": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Address"
+            }
+          },
+          "maritalStatus": {
+            "$ref": "#/components/schemas/CodeableConcept"
+          },
+          "contact": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PatientContact"
+            }
+          },
+          "communication": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PatientCommunication"
+            }
+          },
+          "generalPractitioner": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Reference"
+            }
+          },
+          "managingOrganization": {
+            "$ref": "#/components/schemas/Reference"
+          }
+        },
+        "required": ["resourceType"]
+      },
+      "Observation": {
+        "type": "object",
+        "description": "FHIR Observation resource",
+        "properties": {
+          "resourceType": {
+            "type": "string",
+            "enum": ["Observation"]
+          },
+          "id": {
+            "type": "string"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/Meta"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["registered", "preliminary", "final", "amended", "corrected", "cancelled", "entered-in-error", "unknown"]
+          },
+          "category": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CodeableConcept"
+            }
+          },
+          "code": {
+            "$ref": "#/components/schemas/CodeableConcept"
+          },
+          "subject": {
+            "$ref": "#/components/schemas/Reference"
+          },
+          "encounter": {
+            "$ref": "#/components/schemas/Reference"
+          },
+          "effectiveDateTime": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "valueQuantity": {
+            "$ref": "#/components/schemas/Quantity"
+          },
+          "valueCodeableConcept": {
+            "$ref": "#/components/schemas/CodeableConcept"
+          },
+          "valueString": {
+            "type": "string"
+          },
+          "interpretation": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CodeableConcept"
+            }
+          },
+          "referenceRange": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ObservationReferenceRange"
+            }
+          }
+        },
+        "required": ["resourceType", "status", "code", "subject"]
+      },
+      "Consent": {
+        "type": "object",
+        "description": "FHIR Consent resource for patient data sharing",
+        "properties": {
+          "resourceType": {
+            "type": "string",
+            "enum": ["Consent"]
+          },
+          "id": {
+            "type": "string"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/Meta"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["draft", "proposed", "active", "rejected", "inactive", "entered-in-error"]
+          },
+          "scope": {
+            "$ref": "#/components/schemas/CodeableConcept"
+          },
+          "category": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CodeableConcept"
+            }
+          },
+          "patient": {
+            "$ref": "#/components/schemas/Reference"
+          },
+          "dateTime": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "performer": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Reference"
+            }
+          },
+          "organization": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Reference"
+            }
+          },
+          "policyRule": {
+            "$ref": "#/components/schemas/CodeableConcept"
+          },
+          "provision": {
+            "$ref": "#/components/schemas/ConsentProvision"
+          }
+        },
+        "required": ["resourceType", "status", "scope", "category", "patient"]
+      },
+      "Meta": {
+        "type": "object",
+        "properties": {
+          "versionId": {
+            "type": "string"
+          },
+          "lastUpdated": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "profile": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uri"
+            }
+          },
+          "security": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Coding"
+            }
+          },
+          "tag": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Coding"
+            }
+          }
+        }
+      },
+      "Identifier": {
+        "type": "object",
+        "properties": {
+          "use": {
+            "type": "string",
+            "enum": ["usual", "official", "temp", "secondary", "old"]
+          },
+          "type": {
+            "$ref": "#/components/schemas/CodeableConcept"
+          },
+          "system": {
+            "type": "string",
+            "format": "uri"
+          },
+          "value": {
+            "type": "string"
+          },
+          "period": {
+            "$ref": "#/components/schemas/Period"
+          },
+          "assigner": {
+            "$ref": "#/components/schemas/Reference"
+          }
+        }
+      },
+      "HumanName": {
+        "type": "object",
+        "properties": {
+          "use": {
+            "type": "string",
+            "enum": ["usual", "official", "temp", "nickname", "anonymous", "old", "maiden"]
+          },
+          "text": {
+            "type": "string"
+          },
+          "family": {
+            "type": "string"
+          },
+          "given": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "prefix": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "suffix": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "period": {
+            "$ref": "#/components/schemas/Period"
+          }
+        }
+      },
+      "ContactPoint": {
+        "type": "object",
+        "properties": {
+          "system": {
+            "type": "string",
+            "enum": ["phone", "fax", "email", "pager", "url", "sms", "other"]
+          },
+          "value": {
+            "type": "string"
+          },
+          "use": {
+            "type": "string",
+            "enum": ["home", "work", "temp", "old", "mobile"]
+          },
+          "rank": {
+            "type": "integer"
+          },
+          "period": {
+            "$ref": "#/components/schemas/Period"
+          }
+        }
+      },
+      "Address": {
+        "type": "object",
+        "properties": {
+          "use": {
+            "type": "string",
+            "enum": ["home", "work", "temp", "old", "billing"]
+          },
+          "type": {
+            "type": "string",
+            "enum": ["postal", "physical", "both"]
+          },
+          "text": {
+            "type": "string"
+          },
+          "line": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "city": {
+            "type": "string"
+          },
+          "district": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string"
+          },
+          "postalCode": {
+            "type": "string"
+          },
+          "country": {
+            "type": "string"
+          },
+          "period": {
+            "$ref": "#/components/schemas/Period"
+          }
+        }
+      },
+      "CodeableConcept": {
+        "type": "object",
+        "properties": {
+          "coding": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Coding"
+            }
+          },
+          "text": {
+            "type": "string"
+          }
+        }
+      },
+      "Coding": {
+        "type": "object",
+        "properties": {
+          "system": {
+            "type": "string",
+            "format": "uri"
+          },
+          "version": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string"
+          },
+          "display": {
+            "type": "string"
+          },
+          "userSelected": {
+            "type": "boolean"
+          }
+        }
+      },
+      "Reference": {
+        "type": "object",
+        "properties": {
+          "reference": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "format": "uri"
+          },
+          "identifier": {
+            "$ref": "#/components/schemas/Identifier"
+          },
+          "display": {
+            "type": "string"
+          }
+        }
+      },
+      "Period": {
+        "type": "object",
+        "properties": {
+          "start": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "end": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "Quantity": {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "number"
+          },
+          "comparator": {
+            "type": "string",
+            "enum": ["<", "<=", ">=", ">"]
+          },
+          "unit": {
+            "type": "string"
+          },
+          "system": {
+            "type": "string",
+            "format": "uri"
+          },
+          "code": {
+            "type": "string"
+          }
+        }
+      },
+      "PatientContact": {
+        "type": "object",
+        "properties": {
+          "relationship": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CodeableConcept"
+            }
+          },
+          "name": {
+            "$ref": "#/components/schemas/HumanName"
+          },
+          "telecom": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ContactPoint"
+            }
+          },
+          "address": {
+            "$ref": "#/components/schemas/Address"
+          },
+          "gender": {
+            "type": "string",
+            "enum": ["male", "female", "other", "unknown"]
+          },
+          "organization": {
+            "$ref": "#/components/schemas/Reference"
+          },
+          "period": {
+            "$ref": "#/components/schemas/Period"
+          }
+        }
+      },
+      "PatientCommunication": {
+        "type": "object",
+        "properties": {
+          "language": {
+            "$ref": "#/components/schemas/CodeableConcept"
+          },
+          "preferred": {
+            "type": "boolean"
+          }
+        },
+        "required": ["language"]
+      },
+      "ObservationReferenceRange": {
+        "type": "object",
+        "properties": {
+          "low": {
+            "$ref": "#/components/schemas/Quantity"
+          },
+          "high": {
+            "$ref": "#/components/schemas/Quantity"
+          },
+          "type": {
+            "$ref": "#/components/schemas/CodeableConcept"
+          },
+          "appliesTo": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CodeableConcept"
+            }
+          },
+          "age": {
+            "$ref": "#/components/schemas/Range"
+          },
+          "text": {
+            "type": "string"
+          }
+        }
+      },
+      "Range": {
+        "type": "object",
+        "properties": {
+          "low": {
+            "$ref": "#/components/schemas/Quantity"
+          },
+          "high": {
+            "$ref": "#/components/schemas/Quantity"
+          }
+        }
+      },
+      "ConsentProvision": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["deny", "permit"]
+          },
+          "period": {
+            "$ref": "#/components/schemas/Period"
+          },
+          "actor": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ConsentProvisionActor"
+            }
+          },
+          "action": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CodeableConcept"
+            }
+          },
+          "securityLabel": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Coding"
+            }
+          },
+          "purpose": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Coding"
+            }
+          },
+          "class": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Coding"
+            }
+          },
+          "code": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CodeableConcept"
+            }
+          },
+          "dataPeriod": {
+            "$ref": "#/components/schemas/Period"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ConsentProvisionData"
+            }
+          },
+          "provision": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ConsentProvision"
+            }
+          }
+        }
+      },
+      "ConsentProvisionActor": {
+        "type": "object",
+        "properties": {
+          "role": {
+            "$ref": "#/components/schemas/CodeableConcept"
+          },
+          "reference": {
+            "$ref": "#/components/schemas/Reference"
+          }
+        },
+        "required": ["role", "reference"]
+      },
+      "ConsentProvisionData": {
+        "type": "object",
+        "properties": {
+          "meaning": {
+            "type": "string",
+            "enum": ["instance", "related", "dependents", "authoredby"]
+          },
+          "reference": {
+            "$ref": "#/components/schemas/Reference"
+          }
+        },
+        "required": ["meaning", "reference"]
+      },
+      "OperationOutcome": {
+        "type": "object",
+        "description": "FHIR OperationOutcome for error responses",
+        "properties": {
+          "resourceType": {
+            "type": "string",
+            "enum": ["OperationOutcome"]
+          },
+          "id": {
+            "type": "string"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/Meta"
+          },
+          "issue": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OperationOutcomeIssue"
+            }
+          }
+        },
+        "required": ["resourceType", "issue"]
+      },
+      "OperationOutcomeIssue": {
+        "type": "object",
+        "properties": {
+          "severity": {
+            "type": "string",
+            "enum": ["fatal", "error", "warning", "information"]
+          },
+          "code": {
+            "type": "string",
+            "enum": ["invalid", "structure", "required", "value", "invariant", "security", "login", "unknown", "expired", "forbidden", "suppressed", "processing", "not-supported", "duplicate", "multiple-matches", "not-found", "deleted", "too-long", "code-invalid", "extension", "too-costly", "business-rule", "conflict", "transient", "lock-error", "no-store", "exception", "timeout", "incomplete", "throttled", "informational"]
+          },
+          "details": {
+            "$ref": "#/components/schemas/CodeableConcept"
+          },
+          "diagnostics": {
+            "type": "string"
+          },
+          "location": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "expression": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": ["severity", "code"]
+      }
+    },
+    "responses": {
+      "BadRequest": {
+        "description": "Bad Request - Invalid FHIR request",
+        "content": {
+          "application/fhir+json": {
+            "schema": {
+              "$ref": "#/components/schemas/OperationOutcome"
+            }
+          }
+        }
+      },
+      "Unauthorized": {
+        "description": "Unauthorized - Authentication required",
+        "content": {
+          "application/fhir+json": {
+            "schema": {
+              "$ref": "#/components/schemas/OperationOutcome"
+            }
+          }
+        }
+      },
+      "Forbidden": {
+        "description": "Forbidden - Insufficient permissions or consent",
+        "content": {
+          "application/fhir+json": {
+            "schema": {
+              "$ref": "#/components/schemas/OperationOutcome"
+            }
+          }
+        }
+      },
+      "NotFound": {
+        "description": "Not Found - Resource not found",
+        "content": {
+          "application/fhir+json": {
+            "schema": {
+              "$ref": "#/components/schemas/OperationOutcome"
+            }
+          }
+        }
+      },
+      "UnprocessableEntity": {
+        "description": "Unprocessable Entity - FHIR validation failed",
+        "content": {
+          "application/fhir+json": {
+            "schema": {
+              "$ref": "#/components/schemas/OperationOutcome"
+            }
+          }
+        }
+      },
+      "InternalServerError": {
+        "description": "Internal Server Error",
+        "content": {
+          "application/fhir+json": {
+            "schema": {
+              "$ref": "#/components/schemas/OperationOutcome"
+            }
+          }
+        }
+      }
+    }
+  }
+}
+

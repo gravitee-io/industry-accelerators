@@ -1,0 +1,1735 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "E-commerce Platform API",
+    "description": "Comprehensive e-commerce platform API with PCI DSS compliance, customer management, inventory control, and payment processing capabilities",
+    "version": "2.1.0",
+    "contact": {
+      "name": "E-commerce API Support",
+      "email": "api-support@retailcorp.com",
+      "url": "https://developer.retailcorp.com/support"
+    },
+    "license": {
+      "name": "MIT",
+      "url": "https://opensource.org/licenses/MIT"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://api.retailcorp.com/v2",
+      "description": "Production E-commerce API"
+    },
+    {
+      "url": "https://sandbox-api.retailcorp.com/v2",
+      "description": "Sandbox E-commerce API"
+    }
+  ],
+  "security": [
+    {
+      "oauth2_authorization_code": [
+        "read:products",
+        "write:products",
+        "read:orders",
+        "write:orders",
+        "read:customers",
+        "write:customers"
+      ]
+    }
+  ],
+  "paths": {
+    "/products": {
+      "get": {
+        "summary": "List Products",
+        "description": "Retrieve a paginated list of products with filtering and search capabilities",
+        "operationId": "listProducts",
+        "parameters": [
+          {
+            "name": "category",
+            "in": "query",
+            "description": "Filter by product category",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "brand",
+            "in": "query",
+            "description": "Filter by brand name",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "price_min",
+            "in": "query",
+            "description": "Minimum price filter",
+            "schema": {
+              "type": "number",
+              "format": "decimal"
+            }
+          },
+          {
+            "name": "price_max",
+            "in": "query",
+            "description": "Maximum price filter",
+            "schema": {
+              "type": "number",
+              "format": "decimal"
+            }
+          },
+          {
+            "name": "in_stock",
+            "in": "query",
+            "description": "Filter by stock availability",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "description": "Search query for product name or description",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Page number for pagination",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Number of items per page",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of products",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductList"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      },
+      "post": {
+        "summary": "Create Product",
+        "description": "Create a new product in the catalog",
+        "operationId": "createProduct",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProductRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Product created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Product"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "security": [
+          {
+            "oauth2_authorization_code": ["write:products"]
+          }
+        ]
+      }
+    },
+    "/products/{productId}": {
+      "get": {
+        "summary": "Get Product",
+        "description": "Retrieve detailed information about a specific product",
+        "operationId": "getProduct",
+        "parameters": [
+          {
+            "name": "productId",
+            "in": "path",
+            "required": true,
+            "description": "Product identifier",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Product details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Product"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      },
+      "put": {
+        "summary": "Update Product",
+        "description": "Update an existing product",
+        "operationId": "updateProduct",
+        "parameters": [
+          {
+            "name": "productId",
+            "in": "path",
+            "required": true,
+            "description": "Product identifier",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProductUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Product updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Product"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "security": [
+          {
+            "oauth2_authorization_code": ["write:products"]
+          }
+        ]
+      }
+    },
+    "/orders": {
+      "get": {
+        "summary": "List Orders",
+        "description": "Retrieve a list of orders with filtering capabilities",
+        "operationId": "listOrders",
+        "parameters": [
+          {
+            "name": "customer_id",
+            "in": "query",
+            "description": "Filter by customer ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "description": "Filter by order status",
+            "schema": {
+              "type": "string",
+              "enum": ["pending", "confirmed", "processing", "shipped", "delivered", "cancelled", "refunded"]
+            }
+          },
+          {
+            "name": "date_from",
+            "in": "query",
+            "description": "Filter orders from this date",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "date_to",
+            "in": "query",
+            "description": "Filter orders to this date",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Page number for pagination",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Number of items per page",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of orders",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrderList"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "security": [
+          {
+            "oauth2_authorization_code": ["read:orders"]
+          }
+        ]
+      },
+      "post": {
+        "summary": "Create Order",
+        "description": "Create a new order with payment processing",
+        "operationId": "createOrder",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OrderRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Order created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Order"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "402": {
+            "$ref": "#/components/responses/PaymentRequired"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "security": [
+          {
+            "oauth2_authorization_code": ["write:orders"]
+          }
+        ]
+      }
+    },
+    "/orders/{orderId}": {
+      "get": {
+        "summary": "Get Order",
+        "description": "Retrieve detailed information about a specific order",
+        "operationId": "getOrder",
+        "parameters": [
+          {
+            "name": "orderId",
+            "in": "path",
+            "required": true,
+            "description": "Order identifier",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Order details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Order"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "security": [
+          {
+            "oauth2_authorization_code": ["read:orders"]
+          }
+        ]
+      }
+    },
+    "/customers": {
+      "get": {
+        "summary": "List Customers",
+        "description": "Retrieve a list of customers with search and filtering capabilities",
+        "operationId": "listCustomers",
+        "parameters": [
+          {
+            "name": "email",
+            "in": "query",
+            "description": "Filter by customer email",
+            "schema": {
+              "type": "string",
+              "format": "email"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "description": "Filter by customer status",
+            "schema": {
+              "type": "string",
+              "enum": ["active", "inactive", "suspended"]
+            }
+          },
+          {
+            "name": "loyalty_tier",
+            "in": "query",
+            "description": "Filter by loyalty program tier",
+            "schema": {
+              "type": "string",
+              "enum": ["bronze", "silver", "gold", "platinum"]
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "description": "Search by customer name or email",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Page number for pagination",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Number of items per page",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of customers",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomerList"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "security": [
+          {
+            "oauth2_authorization_code": ["read:customers"]
+          }
+        ]
+      },
+      "post": {
+        "summary": "Create Customer",
+        "description": "Create a new customer account",
+        "operationId": "createCustomer",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CustomerRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Customer created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Customer"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    },
+    "/customers/{customerId}": {
+      "get": {
+        "summary": "Get Customer",
+        "description": "Retrieve detailed information about a specific customer",
+        "operationId": "getCustomer",
+        "parameters": [
+          {
+            "name": "customerId",
+            "in": "path",
+            "required": true,
+            "description": "Customer identifier",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Customer details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Customer"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "security": [
+          {
+            "oauth2_authorization_code": ["read:customers"]
+          }
+        ]
+      }
+    },
+    "/payments": {
+      "post": {
+        "summary": "Process Payment",
+        "description": "Process a payment for an order with PCI DSS compliance",
+        "operationId": "processPayment",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PaymentRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Payment processed successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaymentResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "402": {
+            "$ref": "#/components/responses/PaymentRequired"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "security": [
+          {
+            "oauth2_authorization_code": ["write:payments"]
+          }
+        ]
+      }
+    },
+    "/inventory/{productId}": {
+      "get": {
+        "summary": "Get Inventory",
+        "description": "Retrieve inventory information for a specific product",
+        "operationId": "getInventory",
+        "parameters": [
+          {
+            "name": "productId",
+            "in": "path",
+            "required": true,
+            "description": "Product identifier",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Inventory information",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Inventory"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "security": [
+          {
+            "oauth2_authorization_code": ["read:inventory"]
+          }
+        ]
+      },
+      "put": {
+        "summary": "Update Inventory",
+        "description": "Update inventory levels for a specific product",
+        "operationId": "updateInventory",
+        "parameters": [
+          {
+            "name": "productId",
+            "in": "path",
+            "required": true,
+            "description": "Product identifier",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InventoryUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Inventory updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Inventory"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "security": [
+          {
+            "oauth2_authorization_code": ["write:inventory"]
+          }
+        ]
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "oauth2_authorization_code": {
+        "type": "oauth2",
+        "description": "OAuth 2.0 Authorization Code flow for secure API access",
+        "flows": {
+          "authorizationCode": {
+            "authorizationUrl": "https://auth.retailcorp.com/oauth2/authorize",
+            "tokenUrl": "https://auth.retailcorp.com/oauth2/token",
+            "scopes": {
+              "read:products": "Read access to product catalog",
+              "write:products": "Write access to product catalog",
+              "read:orders": "Read access to orders",
+              "write:orders": "Write access to orders",
+              "read:customers": "Read access to customer data",
+              "write:customers": "Write access to customer data",
+              "read:inventory": "Read access to inventory data",
+              "write:inventory": "Write access to inventory data",
+              "write:payments": "Process payments"
+            }
+          }
+        }
+      }
+    },
+    "schemas": {
+      "ProductList": {
+        "type": "object",
+        "properties": {
+          "products": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Product"
+            }
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/Pagination"
+          }
+        },
+        "required": ["products", "pagination"]
+      },
+      "Product": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique product identifier"
+          },
+          "sku": {
+            "type": "string",
+            "description": "Stock keeping unit"
+          },
+          "name": {
+            "type": "string",
+            "description": "Product name"
+          },
+          "description": {
+            "type": "string",
+            "description": "Product description"
+          },
+          "category": {
+            "type": "string",
+            "description": "Product category"
+          },
+          "brand": {
+            "type": "string",
+            "description": "Product brand"
+          },
+          "price": {
+            "type": "number",
+            "format": "decimal",
+            "description": "Product price"
+          },
+          "currency": {
+            "type": "string",
+            "description": "Price currency code (ISO 4217)"
+          },
+          "images": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uri"
+            },
+            "description": "Product image URLs"
+          },
+          "attributes": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "Product attributes (color, size, etc.)"
+          },
+          "inventory": {
+            "$ref": "#/components/schemas/Inventory"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Product creation timestamp"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Last update timestamp"
+          }
+        },
+        "required": ["id", "sku", "name", "price", "currency"]
+      },
+      "ProductRequest": {
+        "type": "object",
+        "properties": {
+          "sku": {
+            "type": "string",
+            "description": "Stock keeping unit"
+          },
+          "name": {
+            "type": "string",
+            "description": "Product name"
+          },
+          "description": {
+            "type": "string",
+            "description": "Product description"
+          },
+          "category": {
+            "type": "string",
+            "description": "Product category"
+          },
+          "brand": {
+            "type": "string",
+            "description": "Product brand"
+          },
+          "price": {
+            "type": "number",
+            "format": "decimal",
+            "description": "Product price"
+          },
+          "currency": {
+            "type": "string",
+            "description": "Price currency code (ISO 4217)"
+          },
+          "images": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uri"
+            },
+            "description": "Product image URLs"
+          },
+          "attributes": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "Product attributes (color, size, etc.)"
+          },
+          "initial_inventory": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Initial inventory quantity"
+          }
+        },
+        "required": ["sku", "name", "price", "currency"]
+      },
+      "ProductUpdateRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Product name"
+          },
+          "description": {
+            "type": "string",
+            "description": "Product description"
+          },
+          "category": {
+            "type": "string",
+            "description": "Product category"
+          },
+          "brand": {
+            "type": "string",
+            "description": "Product brand"
+          },
+          "price": {
+            "type": "number",
+            "format": "decimal",
+            "description": "Product price"
+          },
+          "images": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uri"
+            },
+            "description": "Product image URLs"
+          },
+          "attributes": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "Product attributes (color, size, etc.)"
+          }
+        }
+      },
+      "OrderList": {
+        "type": "object",
+        "properties": {
+          "orders": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Order"
+            }
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/Pagination"
+          }
+        },
+        "required": ["orders", "pagination"]
+      },
+      "Order": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique order identifier"
+          },
+          "order_number": {
+            "type": "string",
+            "description": "Human-readable order number"
+          },
+          "customer_id": {
+            "type": "string",
+            "description": "Customer identifier"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["pending", "confirmed", "processing", "shipped", "delivered", "cancelled", "refunded"],
+            "description": "Order status"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OrderItem"
+            }
+          },
+          "subtotal": {
+            "type": "number",
+            "format": "decimal",
+            "description": "Order subtotal"
+          },
+          "tax": {
+            "type": "number",
+            "format": "decimal",
+            "description": "Tax amount"
+          },
+          "shipping": {
+            "type": "number",
+            "format": "decimal",
+            "description": "Shipping cost"
+          },
+          "total": {
+            "type": "number",
+            "format": "decimal",
+            "description": "Order total"
+          },
+          "currency": {
+            "type": "string",
+            "description": "Currency code (ISO 4217)"
+          },
+          "shipping_address": {
+            "$ref": "#/components/schemas/Address"
+          },
+          "billing_address": {
+            "$ref": "#/components/schemas/Address"
+          },
+          "payment_method": {
+            "$ref": "#/components/schemas/PaymentMethod"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Order creation timestamp"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Last update timestamp"
+          }
+        },
+        "required": ["id", "order_number", "customer_id", "status", "items", "total", "currency"]
+      },
+      "OrderRequest": {
+        "type": "object",
+        "properties": {
+          "customer_id": {
+            "type": "string",
+            "description": "Customer identifier"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OrderItemRequest"
+            }
+          },
+          "shipping_address": {
+            "$ref": "#/components/schemas/Address"
+          },
+          "billing_address": {
+            "$ref": "#/components/schemas/Address"
+          },
+          "payment_method": {
+            "$ref": "#/components/schemas/PaymentMethodRequest"
+          },
+          "promotional_code": {
+            "type": "string",
+            "description": "Promotional or discount code"
+          }
+        },
+        "required": ["customer_id", "items", "shipping_address", "payment_method"]
+      },
+      "OrderItem": {
+        "type": "object",
+        "properties": {
+          "product_id": {
+            "type": "string",
+            "description": "Product identifier"
+          },
+          "sku": {
+            "type": "string",
+            "description": "Product SKU"
+          },
+          "name": {
+            "type": "string",
+            "description": "Product name"
+          },
+          "quantity": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "Quantity ordered"
+          },
+          "unit_price": {
+            "type": "number",
+            "format": "decimal",
+            "description": "Unit price"
+          },
+          "total_price": {
+            "type": "number",
+            "format": "decimal",
+            "description": "Total price for this item"
+          },
+          "attributes": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "Selected product attributes"
+          }
+        },
+        "required": ["product_id", "sku", "name", "quantity", "unit_price", "total_price"]
+      },
+      "OrderItemRequest": {
+        "type": "object",
+        "properties": {
+          "product_id": {
+            "type": "string",
+            "description": "Product identifier"
+          },
+          "quantity": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "Quantity to order"
+          },
+          "attributes": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "Selected product attributes"
+          }
+        },
+        "required": ["product_id", "quantity"]
+      },
+      "CustomerList": {
+        "type": "object",
+        "properties": {
+          "customers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Customer"
+            }
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/Pagination"
+          }
+        },
+        "required": ["customers", "pagination"]
+      },
+      "Customer": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique customer identifier"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "description": "Customer email address"
+          },
+          "first_name": {
+            "type": "string",
+            "description": "Customer first name"
+          },
+          "last_name": {
+            "type": "string",
+            "description": "Customer last name"
+          },
+          "phone": {
+            "type": "string",
+            "description": "Customer phone number"
+          },
+          "date_of_birth": {
+            "type": "string",
+            "format": "date",
+            "description": "Customer date of birth"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["active", "inactive", "suspended"],
+            "description": "Customer account status"
+          },
+          "loyalty_tier": {
+            "type": "string",
+            "enum": ["bronze", "silver", "gold", "platinum"],
+            "description": "Loyalty program tier"
+          },
+          "loyalty_points": {
+            "type": "integer",
+            "description": "Current loyalty points balance"
+          },
+          "addresses": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Address"
+            }
+          },
+          "preferences": {
+            "$ref": "#/components/schemas/CustomerPreferences"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Customer registration timestamp"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Last update timestamp"
+          }
+        },
+        "required": ["id", "email", "first_name", "last_name", "status"]
+      },
+      "CustomerRequest": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "description": "Customer email address"
+          },
+          "first_name": {
+            "type": "string",
+            "description": "Customer first name"
+          },
+          "last_name": {
+            "type": "string",
+            "description": "Customer last name"
+          },
+          "phone": {
+            "type": "string",
+            "description": "Customer phone number"
+          },
+          "date_of_birth": {
+            "type": "string",
+            "format": "date",
+            "description": "Customer date of birth"
+          },
+          "password": {
+            "type": "string",
+            "minLength": 8,
+            "description": "Customer password"
+          },
+          "addresses": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Address"
+            }
+          },
+          "preferences": {
+            "$ref": "#/components/schemas/CustomerPreferences"
+          }
+        },
+        "required": ["email", "first_name", "last_name", "password"]
+      },
+      "Address": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Address identifier"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["billing", "shipping", "both"],
+            "description": "Address type"
+          },
+          "first_name": {
+            "type": "string",
+            "description": "First name"
+          },
+          "last_name": {
+            "type": "string",
+            "description": "Last name"
+          },
+          "company": {
+            "type": "string",
+            "description": "Company name"
+          },
+          "address_line_1": {
+            "type": "string",
+            "description": "Address line 1"
+          },
+          "address_line_2": {
+            "type": "string",
+            "description": "Address line 2"
+          },
+          "city": {
+            "type": "string",
+            "description": "City"
+          },
+          "state": {
+            "type": "string",
+            "description": "State or province"
+          },
+          "postal_code": {
+            "type": "string",
+            "description": "Postal code"
+          },
+          "country": {
+            "type": "string",
+            "description": "Country code (ISO 3166-1 alpha-2)"
+          },
+          "is_default": {
+            "type": "boolean",
+            "description": "Whether this is the default address"
+          }
+        },
+        "required": ["first_name", "last_name", "address_line_1", "city", "postal_code", "country"]
+      },
+      "CustomerPreferences": {
+        "type": "object",
+        "properties": {
+          "email_marketing": {
+            "type": "boolean",
+            "description": "Opt-in for email marketing"
+          },
+          "sms_marketing": {
+            "type": "boolean",
+            "description": "Opt-in for SMS marketing"
+          },
+          "preferred_language": {
+            "type": "string",
+            "description": "Preferred language code (ISO 639-1)"
+          },
+          "preferred_currency": {
+            "type": "string",
+            "description": "Preferred currency code (ISO 4217)"
+          },
+          "communication_frequency": {
+            "type": "string",
+            "enum": ["daily", "weekly", "monthly", "never"],
+            "description": "Preferred communication frequency"
+          }
+        }
+      },
+      "PaymentRequest": {
+        "type": "object",
+        "properties": {
+          "order_id": {
+            "type": "string",
+            "description": "Order identifier"
+          },
+          "amount": {
+            "type": "number",
+            "format": "decimal",
+            "description": "Payment amount"
+          },
+          "currency": {
+            "type": "string",
+            "description": "Currency code (ISO 4217)"
+          },
+          "payment_method": {
+            "$ref": "#/components/schemas/PaymentMethodRequest"
+          },
+          "billing_address": {
+            "$ref": "#/components/schemas/Address"
+          }
+        },
+        "required": ["order_id", "amount", "currency", "payment_method"]
+      },
+      "PaymentResponse": {
+        "type": "object",
+        "properties": {
+          "payment_id": {
+            "type": "string",
+            "description": "Payment identifier"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["success", "failed", "pending", "cancelled"],
+            "description": "Payment status"
+          },
+          "transaction_id": {
+            "type": "string",
+            "description": "Transaction identifier from payment processor"
+          },
+          "amount": {
+            "type": "number",
+            "format": "decimal",
+            "description": "Payment amount"
+          },
+          "currency": {
+            "type": "string",
+            "description": "Currency code (ISO 4217)"
+          },
+          "processed_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Payment processing timestamp"
+          },
+          "failure_reason": {
+            "type": "string",
+            "description": "Failure reason if payment failed"
+          }
+        },
+        "required": ["payment_id", "status", "amount", "currency"]
+      },
+      "PaymentMethod": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["credit_card", "debit_card", "paypal", "apple_pay", "google_pay", "bank_transfer"],
+            "description": "Payment method type"
+          },
+          "card_last_four": {
+            "type": "string",
+            "description": "Last four digits of card (for card payments)"
+          },
+          "card_brand": {
+            "type": "string",
+            "enum": ["visa", "mastercard", "amex", "discover"],
+            "description": "Card brand (for card payments)"
+          },
+          "expiry_month": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 12,
+            "description": "Card expiry month (for card payments)"
+          },
+          "expiry_year": {
+            "type": "integer",
+            "description": "Card expiry year (for card payments)"
+          }
+        },
+        "required": ["type"]
+      },
+      "PaymentMethodRequest": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["credit_card", "debit_card", "paypal", "apple_pay", "google_pay", "bank_transfer"],
+            "description": "Payment method type"
+          },
+          "card_token": {
+            "type": "string",
+            "description": "Tokenized card information (for card payments)"
+          },
+          "card_number": {
+            "type": "string",
+            "description": "Card number (PCI DSS compliant tokenization required)"
+          },
+          "expiry_month": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 12,
+            "description": "Card expiry month (for card payments)"
+          },
+          "expiry_year": {
+            "type": "integer",
+            "description": "Card expiry year (for card payments)"
+          },
+          "cvv": {
+            "type": "string",
+            "description": "Card verification value (not stored)"
+          },
+          "cardholder_name": {
+            "type": "string",
+            "description": "Cardholder name (for card payments)"
+          }
+        },
+        "required": ["type"]
+      },
+      "Inventory": {
+        "type": "object",
+        "properties": {
+          "product_id": {
+            "type": "string",
+            "description": "Product identifier"
+          },
+          "quantity_available": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Available quantity"
+          },
+          "quantity_reserved": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Reserved quantity"
+          },
+          "quantity_on_order": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Quantity on order from suppliers"
+          },
+          "reorder_level": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Reorder level threshold"
+          },
+          "warehouse_locations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WarehouseLocation"
+            }
+          },
+          "last_updated": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Last inventory update timestamp"
+          }
+        },
+        "required": ["product_id", "quantity_available"]
+      },
+      "InventoryUpdateRequest": {
+        "type": "object",
+        "properties": {
+          "quantity_adjustment": {
+            "type": "integer",
+            "description": "Quantity adjustment (positive or negative)"
+          },
+          "adjustment_reason": {
+            "type": "string",
+            "enum": ["sale", "return", "damage", "theft", "restock", "correction"],
+            "description": "Reason for inventory adjustment"
+          },
+          "warehouse_id": {
+            "type": "string",
+            "description": "Warehouse identifier"
+          },
+          "notes": {
+            "type": "string",
+            "description": "Additional notes"
+          }
+        },
+        "required": ["quantity_adjustment", "adjustment_reason"]
+      },
+      "WarehouseLocation": {
+        "type": "object",
+        "properties": {
+          "warehouse_id": {
+            "type": "string",
+            "description": "Warehouse identifier"
+          },
+          "warehouse_name": {
+            "type": "string",
+            "description": "Warehouse name"
+          },
+          "quantity": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Quantity at this location"
+          },
+          "location": {
+            "type": "string",
+            "description": "Specific location within warehouse"
+          }
+        },
+        "required": ["warehouse_id", "quantity"]
+      },
+      "Pagination": {
+        "type": "object",
+        "properties": {
+          "page": {
+            "type": "integer",
+            "description": "Current page number"
+          },
+          "limit": {
+            "type": "integer",
+            "description": "Items per page"
+          },
+          "total_pages": {
+            "type": "integer",
+            "description": "Total number of pages"
+          },
+          "total_items": {
+            "type": "integer",
+            "description": "Total number of items"
+          },
+          "has_next": {
+            "type": "boolean",
+            "description": "Whether there is a next page"
+          },
+          "has_previous": {
+            "type": "boolean",
+            "description": "Whether there is a previous page"
+          }
+        },
+        "required": ["page", "limit", "total_pages", "total_items", "has_next", "has_previous"]
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "error_code": {
+            "type": "string",
+            "description": "Error code"
+          },
+          "error_message": {
+            "type": "string",
+            "description": "Human-readable error message"
+          },
+          "details": {
+            "type": "object",
+            "description": "Additional error details"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Error timestamp"
+          },
+          "request_id": {
+            "type": "string",
+            "description": "Request identifier for tracking"
+          }
+        },
+        "required": ["error_code", "error_message", "timestamp"]
+      }
+    },
+    "responses": {
+      "BadRequest": {
+        "description": "Bad Request - Invalid request parameters",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            }
+          }
+        }
+      },
+      "Unauthorized": {
+        "description": "Unauthorized - Authentication required",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            }
+          }
+        }
+      },
+      "Forbidden": {
+        "description": "Forbidden - Insufficient permissions",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            }
+          }
+        }
+      },
+      "NotFound": {
+        "description": "Not Found - Resource not found",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            }
+          }
+        }
+      },
+      "Conflict": {
+        "description": "Conflict - Resource already exists",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            }
+          }
+        }
+      },
+      "PaymentRequired": {
+        "description": "Payment Required - Payment failed or required",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            }
+          }
+        }
+      },
+      "UnprocessableEntity": {
+        "description": "Unprocessable Entity - Validation failed",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            }
+          }
+        }
+      },
+      "InternalServerError": {
+        "description": "Internal Server Error",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            }
+          }
+        }
+      }
+    }
+  }
+}
+

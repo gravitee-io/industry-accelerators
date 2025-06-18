@@ -1,0 +1,378 @@
+{
+  "name": "HIPAA Compliance Policy",
+  "description": "Health Insurance Portability and Accountability Act (HIPAA) compliance policy for protecting Protected Health Information (PHI) and ensuring healthcare data security",
+  "type": "POLICY",
+  "configuration": {
+    "phiProtection": {
+      "enabled": true,
+      "identifyPHI": {
+        "enabled": true,
+        "patterns": [
+          {
+            "name": "socialSecurityNumber",
+            "pattern": "\\b(?!000|666|9\\d{2})\\d{3}-(?!00)\\d{2}-(?!0000)\\d{4}\\b",
+            "replacement": "***-**-****",
+            "description": "Social Security Numbers"
+          },
+          {
+            "name": "medicalRecordNumber",
+            "pattern": "\\b(MRN|MR|MEDICAL_RECORD)\\s*:?\\s*([A-Z0-9]{6,12})\\b",
+            "replacement": "MRN: ********",
+            "description": "Medical Record Numbers"
+          },
+          {
+            "name": "healthPlanNumber",
+            "pattern": "\\b(PLAN|POLICY|MEMBER)\\s*:?\\s*([A-Z0-9]{8,15})\\b",
+            "replacement": "PLAN: ********",
+            "description": "Health Plan Numbers"
+          },
+          {
+            "name": "deviceIdentifier",
+            "pattern": "\\b(DEVICE|SERIAL)\\s*:?\\s*([A-Z0-9]{8,20})\\b",
+            "replacement": "DEVICE: ********",
+            "description": "Device Identifiers"
+          },
+          {
+            "name": "biometricIdentifier",
+            "pattern": "\\b(FINGERPRINT|RETINA|VOICE)\\s*:?\\s*([A-Z0-9]{16,64})\\b",
+            "replacement": "BIOMETRIC: ********",
+            "description": "Biometric Identifiers"
+          }
+        ]
+      },
+      "encryption": {
+        "enabled": true,
+        "algorithm": "AES-256-GCM",
+        "keyManagement": {
+          "provider": "HSM",
+          "keyRotationDays": 90,
+          "keyDerivationFunction": "PBKDF2"
+        },
+        "fieldsToEncrypt": [
+          "ssn",
+          "medicalRecordNumber",
+          "healthPlanNumber",
+          "accountNumber",
+          "certificateNumber",
+          "vehicleIdentifier",
+          "deviceIdentifier",
+          "biometricIdentifier",
+          "fullFacePhoto",
+          "webUrl",
+          "ipAddress",
+          "emailAddress",
+          "phoneNumber",
+          "faxNumber"
+        ]
+      },
+      "deIdentification": {
+        "enabled": true,
+        "method": "SAFE_HARBOR",
+        "removeDirectIdentifiers": true,
+        "statisticalDisclosureControl": true,
+        "identifiersToRemove": [
+          "names",
+          "geographicSubdivisions",
+          "datesExceptYear",
+          "telephoneNumbers",
+          "faxNumbers",
+          "emailAddresses",
+          "socialSecurityNumbers",
+          "medicalRecordNumbers",
+          "healthPlanNumbers",
+          "accountNumbers",
+          "certificateNumbers",
+          "vehicleIdentifiers",
+          "deviceIdentifiers",
+          "webUrls",
+          "ipAddresses",
+          "biometricIdentifiers",
+          "fullFacePhotos",
+          "otherUniqueIdentifiers"
+        ]
+      }
+    },
+    "accessControl": {
+      "enabled": true,
+      "minimumNecessary": {
+        "enabled": true,
+        "enforceDataMinimization": true,
+        "roleBasedFiltering": true
+      },
+      "roleBasedAccess": {
+        "enabled": true,
+        "roles": [
+          {
+            "name": "physician",
+            "permissions": ["read_patient_data", "write_patient_data", "read_clinical_notes"],
+            "restrictions": {
+              "dataAccess": "full",
+              "timeRestrictions": {
+                "allowedHours": "00:00-23:59",
+                "timezone": "local"
+              }
+            }
+          },
+          {
+            "name": "nurse",
+            "permissions": ["read_patient_data", "write_vital_signs", "read_medication_orders"],
+            "restrictions": {
+              "dataAccess": "limited",
+              "excludedFields": ["financial_information", "psychiatric_notes"]
+            }
+          },
+          {
+            "name": "patient",
+            "permissions": ["read_own_data", "download_records", "share_data"],
+            "restrictions": {
+              "dataAccess": "own_records_only",
+              "excludedFields": ["provider_notes", "internal_communications"]
+            }
+          },
+          {
+            "name": "researcher",
+            "permissions": ["read_deidentified_data", "export_aggregate_data"],
+            "restrictions": {
+              "dataAccess": "deidentified_only",
+              "requiresIRBApproval": true
+            }
+          },
+          {
+            "name": "billing_staff",
+            "permissions": ["read_billing_data", "process_claims"],
+            "restrictions": {
+              "dataAccess": "billing_related_only",
+              "excludedFields": ["clinical_notes", "diagnostic_images"]
+            }
+          }
+        ]
+      },
+      "patientConsent": {
+        "enabled": true,
+        "requireExplicitConsent": true,
+        "consentGranularity": "per_data_type",
+        "consentTypes": [
+          {
+            "type": "treatment",
+            "description": "Use and disclosure for treatment purposes",
+            "required": false
+          },
+          {
+            "type": "payment",
+            "description": "Use and disclosure for payment purposes",
+            "required": false
+          },
+          {
+            "type": "operations",
+            "description": "Use and disclosure for healthcare operations",
+            "required": false
+          },
+          {
+            "type": "research",
+            "description": "Use and disclosure for research purposes",
+            "required": true
+          },
+          {
+            "type": "marketing",
+            "description": "Use and disclosure for marketing purposes",
+            "required": true
+          },
+          {
+            "type": "third_party_sharing",
+            "description": "Sharing with third parties",
+            "required": true
+          }
+        ]
+      }
+    },
+    "auditLogging": {
+      "enabled": true,
+      "logAllAccess": true,
+      "auditEvents": [
+        "phi_access",
+        "phi_modification",
+        "phi_disclosure",
+        "authentication_attempt",
+        "authorization_decision",
+        "consent_change",
+        "data_export",
+        "system_access",
+        "configuration_change",
+        "security_incident"
+      ],
+      "auditFields": [
+        "timestamp",
+        "user_id",
+        "user_role",
+        "patient_id",
+        "action_performed",
+        "data_accessed",
+        "ip_address",
+        "user_agent",
+        "session_id",
+        "outcome",
+        "failure_reason"
+      ],
+      "retention": {
+        "days": 2555,
+        "compressionEnabled": true,
+        "encryptionEnabled": true,
+        "immutableStorage": true
+      },
+      "integrity": {
+        "enabled": true,
+        "hashAlgorithm": "SHA-256",
+        "digitalSignature": true,
+        "tamperDetection": true
+      }
+    },
+    "dataIntegrity": {
+      "enabled": true,
+      "validation": {
+        "enabled": true,
+        "validateDataTypes": true,
+        "validateBusinessRules": true,
+        "validateRelationships": true
+      },
+      "backup": {
+        "enabled": true,
+        "frequency": "daily",
+        "retention": "7_years",
+        "encryption": true,
+        "offSiteStorage": true,
+        "testRestoration": "monthly"
+      },
+      "versioning": {
+        "enabled": true,
+        "trackAllChanges": true,
+        "retainHistory": true,
+        "changeApprovalRequired": true
+      }
+    },
+    "transmission": {
+      "enabled": true,
+      "requireEncryption": true,
+      "encryptionStandards": {
+        "inTransit": {
+          "protocol": "TLS",
+          "minimumVersion": "1.2",
+          "cipherSuites": [
+            "TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384",
+            "TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256"
+          ]
+        },
+        "atRest": {
+          "algorithm": "AES-256",
+          "keyManagement": "HSM",
+          "databaseEncryption": true,
+          "fileSystemEncryption": true
+        }
+      },
+      "endToEndEncryption": {
+        "enabled": true,
+        "keyExchange": "ECDH",
+        "messageAuthentication": "HMAC-SHA256"
+      }
+    },
+    "businessAssociateAgreement": {
+      "enabled": true,
+      "requireBAA": true,
+      "baaValidation": {
+        "enabled": true,
+        "checkExpiration": true,
+        "validateTerms": true,
+        "requireDigitalSignature": true
+      },
+      "thirdPartyAccess": {
+        "enabled": true,
+        "requireApproval": true,
+        "limitedAccess": true,
+        "auditThirdPartyAccess": true
+      }
+    },
+    "incidentResponse": {
+      "enabled": true,
+      "breachDetection": {
+        "enabled": true,
+        "realTimeMonitoring": true,
+        "anomalyDetection": true,
+        "alertThresholds": {
+          "unusualAccess": 5,
+          "massDataExport": 100,
+          "failedAuthentications": 10,
+          "afterHoursAccess": true
+        }
+      },
+      "breachNotification": {
+        "enabled": true,
+        "notifyPatients": true,
+        "notifyHHS": true,
+        "notifyMedia": true,
+        "timeframes": {
+          "patientNotification": 60,
+          "hhsNotification": 60,
+          "mediaNotification": 60
+        }
+      },
+      "forensics": {
+        "enabled": true,
+        "preserveEvidence": true,
+        "detailedLogging": true,
+        "chainOfCustody": true
+      }
+    },
+    "training": {
+      "enabled": true,
+      "requireTraining": true,
+      "trainingModules": [
+        "hipaa_overview",
+        "phi_handling",
+        "patient_rights",
+        "security_awareness",
+        "incident_reporting",
+        "breach_response"
+      ],
+      "trainingFrequency": "annual",
+      "trackCompletion": true,
+      "testKnowledge": true
+    },
+    "compliance": {
+      "enabled": true,
+      "hipaaRules": {
+        "privacyRule": {
+          "implemented": true,
+          "controls": ["minimum_necessary", "patient_rights", "consent_management", "disclosure_tracking"]
+        },
+        "securityRule": {
+          "implemented": true,
+          "controls": ["access_control", "audit_controls", "integrity", "transmission_security"]
+        },
+        "breachNotificationRule": {
+          "implemented": true,
+          "controls": ["breach_assessment", "notification_procedures", "documentation"]
+        },
+        "enforcementRule": {
+          "implemented": true,
+          "controls": ["compliance_monitoring", "penalty_procedures", "corrective_actions"]
+        }
+      },
+      "safeguards": {
+        "administrative": {
+          "implemented": true,
+          "controls": ["security_officer", "workforce_training", "contingency_plan", "evaluation"]
+        },
+        "physical": {
+          "implemented": true,
+          "controls": ["facility_access", "workstation_use", "device_controls", "media_controls"]
+        },
+        "technical": {
+          "implemented": true,
+          "controls": ["access_control", "audit_controls", "integrity", "transmission_security"]
+        }
+      }
+    }
+  },
+  "enabled": true,
+  "order": 100
+}
+

@@ -1,0 +1,450 @@
+{
+  "name": "Patient Consent Management Policy",
+  "description": "Comprehensive patient consent management policy for healthcare data access with granular permissions, consent verification, and HIPAA compliance",
+  "type": "POLICY",
+  "configuration": {
+    "consentManagement": {
+      "enabled": true,
+      "consentVerification": {
+        "enabled": true,
+        "requireActiveConsent": true,
+        "consentExpiration": {
+          "enabled": true,
+          "defaultExpirationDays": 365,
+          "reminderDays": [30, 7, 1],
+          "autoRevokeExpired": false
+        },
+        "consentGranularity": {
+          "enabled": true,
+          "resourceLevel": true,
+          "fieldLevel": true,
+          "purposeLevel": true,
+          "recipientLevel": true
+        }
+      },
+      "consentTypes": {
+        "enabled": true,
+        "types": [
+          {
+            "name": "treatment",
+            "description": "Consent for treatment and care coordination",
+            "required": true,
+            "defaultGranted": false,
+            "scope": ["Patient", "Condition", "MedicationRequest", "Observation", "Encounter"],
+            "purposes": ["treatment", "care_coordination", "emergency_care"]
+          },
+          {
+            "name": "payment",
+            "description": "Consent for payment and billing operations",
+            "required": true,
+            "defaultGranted": false,
+            "scope": ["Patient", "Encounter", "Claim", "Coverage"],
+            "purposes": ["payment", "billing", "insurance_verification"]
+          },
+          {
+            "name": "healthcare_operations",
+            "description": "Consent for healthcare operations and quality improvement",
+            "required": false,
+            "defaultGranted": false,
+            "scope": ["*"],
+            "purposes": ["quality_improvement", "population_health", "research"]
+          },
+          {
+            "name": "research",
+            "description": "Consent for research and clinical studies",
+            "required": false,
+            "defaultGranted": false,
+            "scope": ["*"],
+            "purposes": ["research", "clinical_trials", "epidemiology"],
+            "additionalRequirements": {
+              "irbApproval": true,
+              "deidentification": true,
+              "dataRetentionLimit": 2555
+            }
+          },
+          {
+            "name": "marketing",
+            "description": "Consent for marketing and promotional communications",
+            "required": false,
+            "defaultGranted": false,
+            "scope": ["Patient"],
+            "purposes": ["marketing", "promotional", "educational"],
+            "optOut": {
+              "enabled": true,
+              "method": ["email", "phone", "portal"]
+            }
+          },
+          {
+            "name": "directory",
+            "description": "Consent for facility directory inclusion",
+            "required": false,
+            "defaultGranted": true,
+            "scope": ["Patient"],
+            "purposes": ["directory", "visitor_information"],
+            "restrictions": {
+              "limitedInfo": true,
+              "religiousInquiry": "opt_in"
+            }
+          }
+        ]
+      },
+      "consentCapture": {
+        "enabled": true,
+        "methods": ["electronic_signature", "verbal_witnessed", "written_form", "patient_portal"],
+        "witnessRequirements": {
+          "enabled": true,
+          "requiredForVerbel": true,
+          "witnessTypes": ["healthcare_provider", "authorized_representative"],
+          "digitalWitness": true
+        },
+        "consentDocumentation": {
+          "enabled": true,
+          "requireSignature": true,
+          "requireTimestamp": true,
+          "requireWitness": true,
+          "attachOriginalDocument": true,
+          "versionControl": true
+        }
+      }
+    },
+    "accessControl": {
+      "enabled": true,
+      "consentBasedAccess": {
+        "enabled": true,
+        "realTimeVerification": true,
+        "cacheConsentDecisions": {
+          "enabled": true,
+          "cacheDuration": 300,
+          "invalidateOnChange": true
+        },
+        "defaultDeny": true,
+        "emergencyOverride": {
+          "enabled": true,
+          "requireJustification": true,
+          "auditEmergencyAccess": true,
+          "notifyPatient": true,
+          "timeLimit": 72
+        }
+      },
+      "purposeLimitation": {
+        "enabled": true,
+        "validatePurpose": true,
+        "purposeMapping": {
+          "treatment": ["read", "write", "update"],
+          "payment": ["read"],
+          "healthcare_operations": ["read", "aggregate"],
+          "research": ["read", "export"],
+          "marketing": ["read_limited"],
+          "directory": ["read_basic"]
+        },
+        "purposeInheritance": {
+          "enabled": true,
+          "hierarchicalPurposes": true
+        }
+      },
+      "dataMinimization": {
+        "enabled": true,
+        "fieldLevelFiltering": {
+          "enabled": true,
+          "sensitiveFields": [
+            "Patient.identifier",
+            "Patient.name",
+            "Patient.telecom",
+            "Patient.address",
+            "Observation.valueString",
+            "Condition.code",
+            "MedicationRequest.medicationCodeableConcept"
+          ],
+          "filteringRules": [
+            {
+              "purpose": "research",
+              "action": "deidentify",
+              "fields": ["Patient.name", "Patient.address", "Patient.telecom"]
+            },
+            {
+              "purpose": "marketing",
+              "action": "exclude",
+              "fields": ["Observation.*", "Condition.*", "MedicationRequest.*"]
+            },
+            {
+              "purpose": "directory",
+              "action": "include_only",
+              "fields": ["Patient.name", "Patient.telecom.phone"]
+            }
+          ]
+        },
+        "aggregationOnly": {
+          "enabled": true,
+          "purposes": ["population_health", "quality_improvement"],
+          "minimumGroupSize": 5,
+          "suppressSmallCells": true
+        }
+      },
+      "temporalRestrictions": {
+        "enabled": true,
+        "timeBasedAccess": {
+          "enabled": true,
+          "businessHoursOnly": false,
+          "allowedTimeRanges": [],
+          "emergencyAccess": true
+        },
+        "dataAgeRestrictions": {
+          "enabled": true,
+          "restrictions": [
+            {
+              "purpose": "treatment",
+              "maxAge": null
+            },
+            {
+              "purpose": "research",
+              "maxAge": 2555
+            },
+            {
+              "purpose": "marketing",
+              "maxAge": 365
+            }
+          ]
+        }
+      }
+    },
+    "consentWorkflow": {
+      "enabled": true,
+      "consentRequest": {
+        "enabled": true,
+        "requestMethods": ["patient_portal", "email", "sms", "in_person"],
+        "requestTemplates": {
+          "enabled": true,
+          "customizable": true,
+          "multilingual": true,
+          "readabilityLevel": "8th_grade"
+        },
+        "informedConsent": {
+          "enabled": true,
+          "requireExplanation": true,
+          "riskDisclosure": true,
+          "benefitExplanation": true,
+          "alternativeOptions": true,
+          "rightToWithdraw": true
+        }
+      },
+      "consentReview": {
+        "enabled": true,
+        "periodicReview": {
+          "enabled": true,
+          "reviewFrequency": 365,
+          "automaticReminders": true,
+          "gracePeriod": 30
+        },
+        "changeNotification": {
+          "enabled": true,
+          "notifyMethods": ["email", "sms", "portal", "mail"],
+          "advanceNotice": 30,
+          "optOutPeriod": 14
+        }
+      },
+      "consentWithdrawal": {
+        "enabled": true,
+        "withdrawalMethods": ["patient_portal", "email", "phone", "written_request"],
+        "immediateEffect": true,
+        "partialWithdrawal": {
+          "enabled": true,
+          "granularControl": true
+        },
+        "dataRetention": {
+          "enabled": true,
+          "retainForLegal": true,
+          "retentionPeriod": 2555,
+          "anonymizeAfterWithdrawal": true
+        }
+      }
+    },
+    "monitoring": {
+      "enabled": true,
+      "consentAuditing": {
+        "enabled": true,
+        "auditEvents": [
+          "consent_granted",
+          "consent_denied",
+          "consent_withdrawn",
+          "consent_expired",
+          "consent_reviewed",
+          "emergency_override",
+          "access_denied_no_consent",
+          "consent_violation"
+        ],
+        "auditDetails": {
+          "enabled": true,
+          "includeUserContext": true,
+          "includeDataAccessed": true,
+          "includePurpose": true,
+          "includeJustification": true
+        }
+      },
+      "complianceMonitoring": {
+        "enabled": true,
+        "realTimeMonitoring": true,
+        "violationDetection": {
+          "enabled": true,
+          "violationTypes": [
+            "access_without_consent",
+            "purpose_violation",
+            "data_minimization_violation",
+            "temporal_violation",
+            "expired_consent_usage"
+          ],
+          "automaticBlocking": true,
+          "alerting": true
+        },
+        "complianceReporting": {
+          "enabled": true,
+          "reportingFrequency": "monthly",
+          "includeMetrics": true,
+          "includeViolations": true,
+          "includeRemediation": true
+        }
+      },
+      "patientNotification": {
+        "enabled": true,
+        "accessNotification": {
+          "enabled": true,
+          "notifyOnAccess": false,
+          "notifyOnSensitiveAccess": true,
+          "batchNotifications": true,
+          "notificationFrequency": "weekly"
+        },
+        "breachNotification": {
+          "enabled": true,
+          "immediateNotification": true,
+          "notificationMethods": ["email", "sms", "mail", "portal"],
+          "includeRemediation": true,
+          "regulatoryNotification": true
+        }
+      }
+    },
+    "integration": {
+      "enabled": true,
+      "fhirIntegration": {
+        "enabled": true,
+        "consentResource": {
+          "enabled": true,
+          "autoCreateConsent": true,
+          "linkToPatient": true,
+          "versionControl": true
+        },
+        "provenanceTracking": {
+          "enabled": true,
+          "trackConsentChanges": true,
+          "trackDataAccess": true,
+          "digitalSignatures": true
+        }
+      },
+      "externalSystems": {
+        "enabled": true,
+        "consentManagementPlatform": {
+          "enabled": true,
+          "syncConsents": true,
+          "realTimeUpdates": true
+        },
+        "identityProvider": {
+          "enabled": true,
+          "linkUserIdentity": true,
+          "roleBasedConsent": true
+        },
+        "auditSystem": {
+          "enabled": true,
+          "forwardAuditEvents": true,
+          "structuredLogging": true
+        }
+      }
+    },
+    "privacy": {
+      "enabled": true,
+      "deidentification": {
+        "enabled": true,
+        "automaticDeidentification": {
+          "enabled": true,
+          "triggers": ["research_purpose", "analytics_purpose"],
+          "methods": ["safe_harbor", "expert_determination", "synthetic_data"]
+        },
+        "reidentificationControls": {
+          "enabled": true,
+          "requireApproval": true,
+          "auditReidentification": true,
+          "limitedReidentification": true
+        }
+      },
+      "dataSubjectRights": {
+        "enabled": true,
+        "rightToAccess": {
+          "enabled": true,
+          "selfServicePortal": true,
+          "responseTime": 30,
+          "formatOptions": ["pdf", "json", "xml"]
+        },
+        "rightToRectification": {
+          "enabled": true,
+          "patientCorrections": true,
+          "providerValidation": true,
+          "auditCorrections": true
+        },
+        "rightToErasure": {
+          "enabled": true,
+          "dataRetentionPolicies": true,
+          "legalHoldExceptions": true,
+          "anonymizationOption": true
+        },
+        "rightToPortability": {
+          "enabled": true,
+          "standardFormats": ["fhir", "ccda", "pdf"],
+          "secureTransfer": true,
+          "verifyRecipient": true
+        }
+      }
+    },
+    "compliance": {
+      "enabled": true,
+      "regulations": {
+        "hipaa": {
+          "implemented": true,
+          "minimumNecessary": true,
+          "authorizationRequirements": true,
+          "patientRights": true,
+          "businessAssociateAgreements": true
+        },
+        "gdpr": {
+          "implemented": true,
+          "lawfulBasis": true,
+          "consentManagement": true,
+          "dataSubjectRights": true,
+          "privacyByDesign": true
+        },
+        "hitech": {
+          "implemented": true,
+          "breachNotification": true,
+          "auditControls": true,
+          "accessControls": true,
+          "dataIntegrity": true
+        },
+        "state_privacy_laws": {
+          "implemented": true,
+          "ccpa": true,
+          "state_specific_requirements": true
+        }
+      },
+      "certifications": {
+        "enabled": true,
+        "supportedCertifications": [
+          "HITRUST",
+          "SOC2_Type2",
+          "ISO27001",
+          "FedRAMP"
+        ],
+        "continuousCompliance": true,
+        "complianceReporting": true
+      }
+    }
+  },
+  "enabled": true,
+  "order": 150
+}
+

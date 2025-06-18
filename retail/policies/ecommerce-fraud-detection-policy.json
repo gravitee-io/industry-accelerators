@@ -1,0 +1,421 @@
+{
+  "name": "E-commerce Fraud Detection Policy",
+  "description": "Advanced fraud detection and prevention policy for e-commerce transactions with machine learning-based risk assessment and real-time monitoring",
+  "type": "POLICY",
+  "configuration": {
+    "fraudDetection": {
+      "enabled": true,
+      "realTimeScoring": {
+        "enabled": true,
+        "scoringModel": "machine_learning",
+        "riskThresholds": {
+          "low": 0.3,
+          "medium": 0.6,
+          "high": 0.8,
+          "critical": 0.95
+        },
+        "actions": {
+          "low": "allow",
+          "medium": "review",
+          "high": "challenge",
+          "critical": "block"
+        }
+      },
+      "riskFactors": {
+        "enabled": true,
+        "factors": [
+          {
+            "name": "transaction_amount",
+            "weight": 0.2,
+            "thresholds": {
+              "low": 100,
+              "medium": 500,
+              "high": 1000,
+              "critical": 5000
+            }
+          },
+          {
+            "name": "transaction_frequency",
+            "weight": 0.15,
+            "timeWindow": 3600,
+            "thresholds": {
+              "low": 3,
+              "medium": 5,
+              "high": 10,
+              "critical": 20
+            }
+          },
+          {
+            "name": "geographic_risk",
+            "weight": 0.1,
+            "highRiskCountries": ["XX", "YY", "ZZ"],
+            "ipGeolocationMismatch": true
+          },
+          {
+            "name": "device_fingerprint",
+            "weight": 0.15,
+            "newDeviceRisk": 0.3,
+            "deviceReputationCheck": true
+          },
+          {
+            "name": "behavioral_analysis",
+            "weight": 0.2,
+            "sessionDuration": true,
+            "navigationPattern": true,
+            "typingPattern": true
+          },
+          {
+            "name": "payment_method_risk",
+            "weight": 0.1,
+            "cardBinAnalysis": true,
+            "cardVelocityCheck": true,
+            "cardTestingDetection": true
+          },
+          {
+            "name": "account_age",
+            "weight": 0.1,
+            "newAccountRisk": 0.4,
+            "accountHistoryAnalysis": true
+          }
+        ]
+      }
+    },
+    "transactionMonitoring": {
+      "enabled": true,
+      "velocityChecks": {
+        "enabled": true,
+        "cardVelocity": {
+          "enabled": true,
+          "timeWindows": [300, 900, 3600, 86400],
+          "limits": [3, 5, 10, 50],
+          "amountLimits": [500, 1000, 5000, 10000]
+        },
+        "customerVelocity": {
+          "enabled": true,
+          "timeWindows": [3600, 86400, 604800],
+          "transactionLimits": [10, 50, 200],
+          "amountLimits": [2000, 10000, 50000]
+        },
+        "merchantVelocity": {
+          "enabled": true,
+          "timeWindows": [300, 3600, 86400],
+          "limits": [100, 1000, 10000]
+        }
+      },
+      "patternAnalysis": {
+        "enabled": true,
+        "roundAmountDetection": {
+          "enabled": true,
+          "threshold": 0.8,
+          "suspiciousPatterns": ["100.00", "200.00", "500.00", "1000.00"]
+        },
+        "sequentialTransactions": {
+          "enabled": true,
+          "timeWindow": 300,
+          "minimumCount": 3,
+          "amountVariation": 0.1
+        },
+        "unusualTimePatterns": {
+          "enabled": true,
+          "offHoursRisk": 0.3,
+          "weekendRisk": 0.2,
+          "holidayRisk": 0.4
+        }
+      },
+      "blacklistChecking": {
+        "enabled": true,
+        "cardBlacklist": {
+          "enabled": true,
+          "sources": ["internal", "industry_shared", "card_networks"]
+        },
+        "ipBlacklist": {
+          "enabled": true,
+          "sources": ["internal", "threat_intelligence", "tor_exit_nodes"]
+        },
+        "emailBlacklist": {
+          "enabled": true,
+          "disposableEmailDetection": true,
+          "domainReputationCheck": true
+        },
+        "deviceBlacklist": {
+          "enabled": true,
+          "fingerprintBlacklist": true,
+          "compromisedDeviceDetection": true
+        }
+      }
+    },
+    "customerAuthentication": {
+      "enabled": true,
+      "strongCustomerAuthentication": {
+        "enabled": true,
+        "psd2Compliance": true,
+        "exemptions": {
+          "lowValue": {
+            "enabled": true,
+            "threshold": 30,
+            "cumulativeLimit": 100
+          },
+          "trustedBeneficiary": {
+            "enabled": true,
+            "whitelistManagement": true
+          },
+          "corporatePayments": {
+            "enabled": true,
+            "dedicatedProtocols": true
+          }
+        }
+      },
+      "riskBasedAuthentication": {
+        "enabled": true,
+        "adaptiveAuthentication": true,
+        "contextualFactors": [
+          "device_trust",
+          "location_trust",
+          "behavioral_biometrics",
+          "transaction_risk"
+        ],
+        "stepUpAuthentication": {
+          "enabled": true,
+          "triggers": ["high_risk_transaction", "new_device", "unusual_location"],
+          "methods": ["SMS_OTP", "EMAIL_OTP", "TOTP", "BIOMETRIC"]
+        }
+      },
+      "biometricAuthentication": {
+        "enabled": true,
+        "supportedMethods": ["fingerprint", "face_recognition", "voice_recognition"],
+        "livenessDetection": true,
+        "templateProtection": true
+      }
+    },
+    "machinelearning": {
+      "enabled": true,
+      "models": {
+        "transactionScoring": {
+          "enabled": true,
+          "algorithm": "gradient_boosting",
+          "features": [
+            "transaction_amount",
+            "merchant_category",
+            "time_of_day",
+            "day_of_week",
+            "customer_history",
+            "device_fingerprint",
+            "geolocation",
+            "payment_method"
+          ],
+          "trainingFrequency": "weekly",
+          "modelValidation": true
+        },
+        "behavioralAnalysis": {
+          "enabled": true,
+          "algorithm": "neural_network",
+          "features": [
+            "session_duration",
+            "page_navigation",
+            "mouse_movements",
+            "typing_patterns",
+            "scroll_behavior"
+          ],
+          "anomalyDetection": true,
+          "baselineEstablishment": 30
+        },
+        "networkAnalysis": {
+          "enabled": true,
+          "algorithm": "graph_neural_network",
+          "features": [
+            "device_connections",
+            "payment_method_sharing",
+            "address_relationships",
+            "velocity_patterns"
+          ],
+          "communityDetection": true,
+          "suspiciousNetworkIdentification": true
+        }
+      },
+      "modelManagement": {
+        "enabled": true,
+        "versionControl": true,
+        "performanceMonitoring": true,
+        "driftDetection": true,
+        "automaticRetraining": true,
+        "explainability": {
+          "enabled": true,
+          "featureImportance": true,
+          "decisionExplanation": true
+        }
+      }
+    },
+    "alerting": {
+      "enabled": true,
+      "realTimeAlerts": {
+        "enabled": true,
+        "channels": ["email", "sms", "webhook", "dashboard"],
+        "alertLevels": ["info", "warning", "critical", "emergency"],
+        "escalationRules": {
+          "enabled": true,
+          "timeouts": [300, 900, 1800],
+          "escalationLevels": ["analyst", "supervisor", "manager"]
+        }
+      },
+      "alertTypes": {
+        "highRiskTransaction": {
+          "enabled": true,
+          "threshold": 0.8,
+          "immediateAlert": true
+        },
+        "velocityViolation": {
+          "enabled": true,
+          "multipleViolations": true,
+          "timeWindow": 300
+        },
+        "blacklistHit": {
+          "enabled": true,
+          "immediateAlert": true,
+          "blockTransaction": true
+        },
+        "patternAnomaly": {
+          "enabled": true,
+          "threshold": 0.7,
+          "contextualAlert": true
+        },
+        "authenticationFailure": {
+          "enabled": true,
+          "consecutiveFailures": 3,
+          "timeWindow": 900
+        }
+      }
+    },
+    "caseManagement": {
+      "enabled": true,
+      "automaticCaseCreation": {
+        "enabled": true,
+        "riskThreshold": 0.6,
+        "caseTypes": ["fraud_investigation", "false_positive_review", "customer_verification"]
+      },
+      "workflowManagement": {
+        "enabled": true,
+        "assignmentRules": {
+          "enabled": true,
+          "skillBasedRouting": true,
+          "workloadBalancing": true
+        },
+        "slaManagement": {
+          "enabled": true,
+          "responseTime": {
+            "critical": 300,
+            "high": 900,
+            "medium": 3600,
+            "low": 86400
+          },
+          "resolutionTime": {
+            "critical": 3600,
+            "high": 14400,
+            "medium": 86400,
+            "low": 259200
+          }
+        }
+      },
+      "decisionTracking": {
+        "enabled": true,
+        "outcomeRecording": true,
+        "feedbackLoop": true,
+        "modelImprovement": true
+      }
+    },
+    "reporting": {
+      "enabled": true,
+      "fraudMetrics": {
+        "enabled": true,
+        "metrics": [
+          "fraud_rate",
+          "false_positive_rate",
+          "detection_rate",
+          "financial_impact",
+          "processing_time"
+        ],
+        "reportingFrequency": "daily",
+        "trendAnalysis": true
+      },
+      "performanceReports": {
+        "enabled": true,
+        "modelPerformance": true,
+        "ruleEffectiveness": true,
+        "operationalMetrics": true,
+        "benchmarking": true
+      },
+      "regulatoryReporting": {
+        "enabled": true,
+        "suspiciousActivityReports": true,
+        "fraudStatistics": true,
+        "complianceMetrics": true
+      }
+    },
+    "integration": {
+      "enabled": true,
+      "externalServices": {
+        "threatIntelligence": {
+          "enabled": true,
+          "providers": ["threat_intel_provider_1", "threat_intel_provider_2"],
+          "realTimeFeeds": true,
+          "historicalData": true
+        },
+        "deviceIntelligence": {
+          "enabled": true,
+          "deviceFingerprinting": true,
+          "deviceReputationServices": true,
+          "botDetection": true
+        },
+        "geolocationServices": {
+          "enabled": true,
+          "ipGeolocation": true,
+          "vpnDetection": true,
+          "proxyDetection": true
+        },
+        "identityVerification": {
+          "enabled": true,
+          "kycProviders": true,
+          "documentVerification": true,
+          "biometricVerification": true
+        }
+      },
+      "dataSharing": {
+        "enabled": true,
+        "industryConsortiums": true,
+        "cardNetworks": true,
+        "lawEnforcement": true,
+        "privacyCompliance": true
+      }
+    },
+    "compliance": {
+      "enabled": true,
+      "regulations": {
+        "psd2": {
+          "implemented": true,
+          "strongCustomerAuthentication": true,
+          "exemptionManagement": true
+        },
+        "gdpr": {
+          "implemented": true,
+          "dataMinimization": true,
+          "consentManagement": true,
+          "rightToExplanation": true
+        },
+        "pciDss": {
+          "implemented": true,
+          "dataProtection": true,
+          "accessControl": true,
+          "monitoring": true
+        }
+      },
+      "auditTrail": {
+        "enabled": true,
+        "decisionLogging": true,
+        "dataLineage": true,
+        "complianceReporting": true
+      }
+    }
+  },
+  "enabled": true,
+  "order": 200
+}
+

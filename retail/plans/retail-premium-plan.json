@@ -1,0 +1,334 @@
+{
+  "name": "Retail Premium Plan",
+  "description": "Premium API access plan for retail and e-commerce platforms with enhanced security, fraud protection, and high-volume transaction support",
+  "type": "API_KEY",
+  "validation": "AUTO",
+  "characteristics": [],
+  "order": 1,
+  "paths": {},
+  "flows": [
+    {
+      "name": "Retail Security Flow",
+      "path-operator": {
+        "path": "/",
+        "operator": "STARTS_WITH"
+      },
+      "condition": "",
+      "consumers": [],
+      "methods": [],
+      "pre": [
+        {
+          "name": "rate-limit",
+          "description": "Rate limiting for retail APIs",
+          "enabled": true,
+          "policy": "rate-limit",
+          "configuration": {
+            "rate": {
+              "limit": 10000,
+              "periodTime": 1,
+              "periodTimeUnit": "HOURS"
+            },
+            "async": false,
+            "addHeaders": true,
+            "key": "api-key"
+          }
+        },
+        {
+          "name": "quota",
+          "description": "Monthly quota for premium retail plan",
+          "enabled": true,
+          "policy": "quota",
+          "configuration": {
+            "quota": {
+              "limit": 1000000,
+              "periodTime": 1,
+              "periodTimeUnit": "MONTHS"
+            },
+            "async": false,
+            "addHeaders": true,
+            "key": "api-key"
+          }
+        },
+        {
+          "name": "pci-dss-compliance",
+          "description": "PCI DSS compliance policy for payment processing",
+          "enabled": true,
+          "policy": "pci-dss-compliance-policy",
+          "configuration": {}
+        },
+        {
+          "name": "fraud-detection",
+          "description": "E-commerce fraud detection and prevention",
+          "enabled": true,
+          "policy": "ecommerce-fraud-detection-policy",
+          "configuration": {}
+        },
+        {
+          "name": "ip-filtering",
+          "description": "IP whitelist/blacklist filtering",
+          "enabled": true,
+          "policy": "ip-filtering",
+          "configuration": {
+            "matchAllFromXForwardedFor": false,
+            "whitelistIps": [],
+            "blacklistIps": [
+              "10.0.0.0/8",
+              "172.16.0.0/12",
+              "192.168.0.0/16"
+            ]
+          }
+        },
+        {
+          "name": "cors",
+          "description": "CORS policy for web applications",
+          "enabled": true,
+          "policy": "cors",
+          "configuration": {
+            "allowCredentials": true,
+            "allowHeaders": [
+              "Authorization",
+              "Content-Type",
+              "X-Requested-With",
+              "X-API-Key",
+              "X-Customer-ID"
+            ],
+            "allowMethods": [
+              "GET",
+              "POST",
+              "PUT",
+              "DELETE",
+              "OPTIONS",
+              "PATCH"
+            ],
+            "allowOrigin": [
+              "https://*.retailcorp.com",
+              "https://localhost:3000"
+            ],
+            "exposeHeaders": [
+              "X-Rate-Limit-Limit",
+              "X-Rate-Limit-Remaining",
+              "X-Rate-Limit-Reset"
+            ],
+            "maxAge": 86400,
+            "runPolicies": false
+          }
+        },
+        {
+          "name": "request-validation",
+          "description": "Request validation against OpenAPI specification",
+          "enabled": true,
+          "policy": "request-validation",
+          "configuration": {
+            "validateRequestBody": true,
+            "validateRequestHeaders": true,
+            "validateRequestParameters": true,
+            "deepCheck": true,
+            "validateUncoveredOperations": false
+          }
+        },
+        {
+          "name": "oauth2",
+          "description": "OAuth 2.0 authentication for secure API access",
+          "enabled": true,
+          "policy": "oauth2",
+          "configuration": {
+            "oauthResource": "retail-api-resource",
+            "oauthScopes": [
+              "read:products",
+              "write:products",
+              "read:orders",
+              "write:orders",
+              "read:customers",
+              "write:customers",
+              "read:inventory",
+              "write:inventory",
+              "write:payments"
+            ],
+            "checkRequiredScopes": true,
+            "modeStrict": true,
+            "propagateAuthHeader": true,
+            "extractPayload": true
+          }
+        },
+        {
+          "name": "transform-headers",
+          "description": "Add security and tracking headers",
+          "enabled": true,
+          "policy": "transform-headers",
+          "configuration": {
+            "addHeaders": [
+              {
+                "name": "X-Request-ID",
+                "value": "{#request.id}"
+              },
+              {
+                "name": "X-Timestamp",
+                "value": "{#request.timestamp}"
+              },
+              {
+                "name": "X-API-Version",
+                "value": "v2.1.0"
+              }
+            ],
+            "removeHeaders": [
+              "Server",
+              "X-Powered-By"
+            ]
+          }
+        }
+      ],
+      "post": [
+        {
+          "name": "response-templates",
+          "description": "Standardized response templates for retail APIs",
+          "enabled": true,
+          "policy": "response-templates",
+          "configuration": {
+            "templates": [
+              {
+                "statusCode": 400,
+                "headers": {
+                  "Content-Type": "application/json"
+                },
+                "body": "{\n  \"error_code\": \"INVALID_REQUEST\",\n  \"error_message\": \"The request is invalid or malformed\",\n  \"details\": {\n    \"validation_errors\": \"{#context.attributes['validation-errors']}\"\n  },\n  \"timestamp\": \"{#request.timestamp}\",\n  \"request_id\": \"{#request.id}\"\n}"
+              },
+              {
+                "statusCode": 401,
+                "headers": {
+                  "Content-Type": "application/json"
+                },
+                "body": "{\n  \"error_code\": \"UNAUTHORIZED\",\n  \"error_message\": \"Authentication is required to access this resource\",\n  \"details\": {\n    \"authentication_scheme\": \"OAuth 2.0\",\n    \"required_scopes\": \"{#context.attributes['required-scopes']}\"\n  },\n  \"timestamp\": \"{#request.timestamp}\",\n  \"request_id\": \"{#request.id}\"\n}"
+              },
+              {
+                "statusCode": 403,
+                "headers": {
+                  "Content-Type": "application/json"
+                },
+                "body": "{\n  \"error_code\": \"FORBIDDEN\",\n  \"error_message\": \"Insufficient permissions to access this resource\",\n  \"details\": {\n    \"required_permissions\": \"{#context.attributes['required-permissions']}\",\n    \"user_permissions\": \"{#context.attributes['user-permissions']}\"\n  },\n  \"timestamp\": \"{#request.timestamp}\",\n  \"request_id\": \"{#request.id}\"\n}"
+              },
+              {
+                "statusCode": 404,
+                "headers": {
+                  "Content-Type": "application/json"
+                },
+                "body": "{\n  \"error_code\": \"NOT_FOUND\",\n  \"error_message\": \"The requested resource was not found\",\n  \"details\": {\n    \"resource_type\": \"{#context.attributes['resource-type']}\",\n    \"resource_id\": \"{#context.attributes['resource-id']}\"\n  },\n  \"timestamp\": \"{#request.timestamp}\",\n  \"request_id\": \"{#request.id}\"\n}"
+              },
+              {
+                "statusCode": 409,
+                "headers": {
+                  "Content-Type": "application/json"
+                },
+                "body": "{\n  \"error_code\": \"CONFLICT\",\n  \"error_message\": \"The request conflicts with the current state of the resource\",\n  \"details\": {\n    \"conflict_reason\": \"{#context.attributes['conflict-reason']}\",\n    \"existing_resource\": \"{#context.attributes['existing-resource']}\"\n  },\n  \"timestamp\": \"{#request.timestamp}\",\n  \"request_id\": \"{#request.id}\"\n}"
+              },
+              {
+                "statusCode": 429,
+                "headers": {
+                  "Content-Type": "application/json",
+                  "Retry-After": "{#context.attributes['retry-after']}"
+                },
+                "body": "{\n  \"error_code\": \"RATE_LIMIT_EXCEEDED\",\n  \"error_message\": \"Rate limit exceeded. Please retry after the specified time\",\n  \"details\": {\n    \"limit\": \"{#context.attributes['rate-limit']}\",\n    \"remaining\": \"{#context.attributes['rate-remaining']}\",\n    \"reset_time\": \"{#context.attributes['rate-reset']}\",\n    \"retry_after\": \"{#context.attributes['retry-after']}\"\n  },\n  \"timestamp\": \"{#request.timestamp}\",\n  \"request_id\": \"{#request.id}\"\n}"
+              },
+              {
+                "statusCode": 500,
+                "headers": {
+                  "Content-Type": "application/json"
+                },
+                "body": "{\n  \"error_code\": \"INTERNAL_SERVER_ERROR\",\n  \"error_message\": \"An internal server error occurred\",\n  \"details\": {\n    \"incident_id\": \"{#context.attributes['incident-id']}\",\n    \"support_contact\": \"api-support@retailcorp.com\"\n  },\n  \"timestamp\": \"{#request.timestamp}\",\n  \"request_id\": \"{#request.id}\"\n}"
+              }
+            ]
+          }
+        },
+        {
+          "name": "transform-headers",
+          "description": "Add response headers for security and caching",
+          "enabled": true,
+          "policy": "transform-headers",
+          "configuration": {
+            "addHeaders": [
+              {
+                "name": "X-Content-Type-Options",
+                "value": "nosniff"
+              },
+              {
+                "name": "X-Frame-Options",
+                "value": "DENY"
+              },
+              {
+                "name": "X-XSS-Protection",
+                "value": "1; mode=block"
+              },
+              {
+                "name": "Strict-Transport-Security",
+                "value": "max-age=31536000; includeSubDomains"
+              },
+              {
+                "name": "Cache-Control",
+                "value": "no-store, no-cache, must-revalidate, private"
+              },
+              {
+                "name": "X-Request-ID",
+                "value": "{#request.id}"
+              },
+              {
+                "name": "X-Response-Time",
+                "value": "{#context.attributes['response-time']}"
+              }
+            ]
+          }
+        },
+        {
+          "name": "metrics",
+          "description": "Collect metrics for monitoring and analytics",
+          "enabled": true,
+          "policy": "metrics",
+          "configuration": {
+            "labels": [
+              {
+                "key": "api_name",
+                "value": "retail-ecommerce-api"
+              },
+              {
+                "key": "plan_name",
+                "value": "retail-premium"
+              },
+              {
+                "key": "customer_tier",
+                "value": "{#context.attributes['customer-tier']}"
+              },
+              {
+                "key": "endpoint",
+                "value": "{#request.pathInfo}"
+              },
+              {
+                "key": "method",
+                "value": "{#request.method}"
+              }
+            ]
+          }
+        }
+      ],
+      "enabled": true
+    }
+  ],
+  "securityDefinition": "API_KEY",
+  "security": {
+    "config": {}
+  },
+  "tags": [
+    "retail",
+    "ecommerce",
+    "premium",
+    "pci-compliant",
+    "fraud-protection"
+  ],
+  "selection_rule": "",
+  "comment_required": false,
+  "comment_message": "",
+  "general_conditions": [
+    "Customer must have a valid retail business license",
+    "PCI DSS compliance certification required for payment processing",
+    "Fraud monitoring and reporting capabilities must be implemented",
+    "Customer must agree to data sharing for fraud prevention purposes"
+  ]
+}
+
