@@ -1,0 +1,31 @@
+{
+  "name": "Data Logging Masking",
+  "enabled": true,
+  "policy": "policy-data-logging-masking",
+  "configuration": {
+    "scope": "REQUEST_CONTENT",
+    "bodyRules": [
+      {
+        "path": "$..[?(@.ssn)]",
+        "regex": "\\d{3}-\\d{2}-\\d{4}",
+        "replacer": "XXX-XX-XXXX",
+        "type": "CUSTOM"
+      },
+      {
+        "path": "$..[?(@.address)]",
+        "regex": ".*",
+        "replacer": "[REDACTED]",
+        "type": "CUSTOM"
+      }
+    ]
+  }
+},
+{
+  "name": "PII Data Filter",
+  "enabled": true,
+  "policy": "groovy",
+  "configuration": {
+    "scope": "REQUEST",
+    "script": "import groovy.json.JsonSlurper\nimport groovy.json.JsonOutput\n\ndef filterPII(def content) {\n    if (content instanceof Map) {\n        content.each { key, value ->\n            def sensitiveFields = ['ssn', 'social', 'socialSecurity', 'social_security',\n                                 'email', 'phone', 'address', 'birthdate', 'dob',\n                                 'password', 'creditCard', 'credit_card', 'license',\n                                 'passport', 'firstName', 'first_name', 'lastName',\n                                 'last_name', 'dateOfBirth', 'date_of_birth']\n            \n            if (sensitiveFields.any { key.toLowerCase().contains(it.toLowerCase()) }) {\n                content[key] = \"[REDACTED]\"\n            } \n            else if (value instanceof Map || value instanceof List) {\n                content[key] = filterPII(value)\n            }\n            else if (value instanceof String) {\n                if (value =~ /[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,6}/) {\n                    content[key] = \"[REDACTED EMAIL]\"\n                }\n                else if (value =~ /\\b\\d{3}[-.]?\\d{2}[-.]?\\d{4}\\b/) {\n                    content[key] = \"[REDACTED SSN]\"\n                }\n                else if (value =~ /\\b(\\+\\d{1,2}\\s?)?\\(?\\d{3}\\)?[\\s.-]?\\d{3}[\\s.-]?\\d{4}\\b/) {\n                    content[key] = \"[REDACTED PHONE]\"\n                }\n                else if (value =~ /\\b\\d{4}[\\s-]?\\d{4}[\\s-]?\\d{4}[\\s-]?\\d{4}\\b/) {\n                    content[key] = \"[REDACTED CREDIT CARD]\"\n                }\n            }\n        }\n    } \n    else if (content instanceof List) {\n        content = content.collect { filterPII(it) }\n    }\n    return content\n}\n\nif (response.content != null && response.headers.'Content-Type'?.contains('application/json')) {\n    try {\n        def jsonSlurper = new JsonSlurper()\n        def content = jsonSlurper.parseText(response.content)\n        content = filterPII(content)\n        response.content = JsonOutput.toJson(content)\n    } catch (Exception e) {\n        logger.error(\"Failed to process JSON content: \" + e.message)\n    }\n}"
+  }
+}
