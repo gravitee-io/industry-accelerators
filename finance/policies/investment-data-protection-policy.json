@@ -1,0 +1,488 @@
+{
+  "name": "Investment Data Protection Policy",
+  "description": "Advanced data protection policy for investment management platforms with client data encryption, access controls, and regulatory compliance",
+  "type": "data-protection",
+  "version": "2.0.0",
+  "enabled": true,
+  "configuration": {
+    "data_classification": {
+      "enabled": true,
+      "classification_levels": {
+        "public": {
+          "encryption": "none",
+          "access_control": "public",
+          "retention": "indefinite"
+        },
+        "internal": {
+          "encryption": "AES-128",
+          "access_control": "employee_only",
+          "retention": "3_years"
+        },
+        "confidential": {
+          "encryption": "AES-256",
+          "access_control": "role_based",
+          "retention": "7_years"
+        },
+        "restricted": {
+          "encryption": "AES-256-GCM",
+          "access_control": "need_to_know",
+          "retention": "7_years",
+          "additional_controls": [
+            "multi_factor_authentication",
+            "audit_logging",
+            "data_loss_prevention"
+          ]
+        }
+      },
+      "auto_classification": {
+        "enabled": true,
+        "ml_based": true,
+        "patterns": [
+          {
+            "pattern": "\\b\\d{3}-\\d{2}-\\d{4}\\b",
+            "classification": "restricted",
+            "type": "ssn"
+          },
+          {
+            "pattern": "\\b\\d{4}[\\s-]?\\d{4}[\\s-]?\\d{4}[\\s-]?\\d{4}\\b",
+            "classification": "restricted",
+            "type": "credit_card"
+          },
+          {
+            "pattern": "\\b\\d{8,12}\\b",
+            "classification": "confidential",
+            "type": "account_number"
+          },
+          {
+            "pattern": "\\$[\\d,]+\\.\\d{2}",
+            "classification": "confidential",
+            "type": "financial_amount"
+          }
+        ]
+      }
+    },
+    "encryption": {
+      "at_rest": {
+        "algorithm": "AES-256-GCM",
+        "key_management": "AWS_KMS",
+        "key_rotation": "quarterly",
+        "field_level_encryption": [
+          "client_ssn",
+          "account_numbers",
+          "bank_routing_numbers",
+          "personal_identifiers",
+          "financial_statements",
+          "investment_positions"
+        ]
+      },
+      "in_transit": {
+        "protocol": "TLS-1.3",
+        "cipher_suites": [
+          "TLS_AES_256_GCM_SHA384",
+          "TLS_CHACHA20_POLY1305_SHA256"
+        ],
+        "certificate_pinning": true,
+        "perfect_forward_secrecy": true
+      },
+      "in_processing": {
+        "homomorphic_encryption": true,
+        "secure_enclaves": true,
+        "memory_encryption": true
+      }
+    },
+    "access_controls": {
+      "authentication": {
+        "multi_factor_required": true,
+        "supported_factors": [
+          "password",
+          "totp",
+          "hardware_token",
+          "biometric",
+          "smart_card"
+        ],
+        "adaptive_authentication": {
+          "enabled": true,
+          "risk_factors": [
+            "location",
+            "device",
+            "time_of_day",
+            "access_pattern",
+            "network"
+          ]
+        },
+        "session_management": {
+          "timeout": "30_minutes",
+          "concurrent_sessions": 3,
+          "session_binding": true
+        }
+      },
+      "authorization": {
+        "model": "RBAC_ABAC_hybrid",
+        "roles": [
+          {
+            "name": "portfolio_manager",
+            "permissions": [
+              "portfolio:read",
+              "portfolio:write",
+              "trading:execute",
+              "client:read",
+              "performance:read"
+            ],
+            "restrictions": [
+              "client_assignment_required",
+              "trading_limits_enforced"
+            ]
+          },
+          {
+            "name": "investment_advisor",
+            "permissions": [
+              "portfolio:read",
+              "client:read",
+              "client:write",
+              "goals:read",
+              "goals:write",
+              "reports:read"
+            ],
+            "restrictions": [
+              "client_assignment_required",
+              "fiduciary_duty_enforced"
+            ]
+          },
+          {
+            "name": "compliance_officer",
+            "permissions": [
+              "compliance:read",
+              "audit:read",
+              "violations:read",
+              "reports:read",
+              "monitoring:read"
+            ],
+            "restrictions": [
+              "read_only_access",
+              "audit_trail_required"
+            ]
+          },
+          {
+            "name": "risk_manager",
+            "permissions": [
+              "risk:read",
+              "portfolio:read",
+              "positions:read",
+              "limits:read",
+              "limits:write"
+            ],
+            "restrictions": [
+              "risk_focused_access",
+              "approval_required_for_changes"
+            ]
+          },
+          {
+            "name": "client",
+            "permissions": [
+              "own_portfolio:read",
+              "own_performance:read",
+              "own_statements:read",
+              "own_goals:read"
+            ],
+            "restrictions": [
+              "own_data_only",
+              "read_only_access"
+            ]
+          }
+        ],
+        "attributes": [
+          {
+            "name": "client_assignment",
+            "type": "string_array",
+            "description": "List of assigned client IDs"
+          },
+          {
+            "name": "portfolio_access",
+            "type": "string_array",
+            "description": "List of accessible portfolio IDs"
+          },
+          {
+            "name": "data_sensitivity_clearance",
+            "type": "string",
+            "enum": ["public", "internal", "confidential", "restricted"],
+            "description": "Maximum data sensitivity level accessible"
+          },
+          {
+            "name": "geographic_restriction",
+            "type": "string_array",
+            "description": "Geographic regions where access is allowed"
+          }
+        ],
+        "dynamic_permissions": {
+          "enabled": true,
+          "context_aware": true,
+          "time_based": true,
+          "location_based": true
+        }
+      },
+      "segregation_of_duties": {
+        "enabled": true,
+        "conflicting_roles": [
+          ["portfolio_manager", "compliance_officer"],
+          ["trader", "settlement_officer"],
+          ["risk_manager", "portfolio_manager"]
+        ],
+        "approval_workflows": [
+          {
+            "action": "large_trade_execution",
+            "threshold": 1000000,
+            "approvers": ["risk_manager", "compliance_officer"]
+          },
+          {
+            "action": "client_onboarding",
+            "approvers": ["compliance_officer", "senior_advisor"]
+          },
+          {
+            "action": "policy_changes",
+            "approvers": ["compliance_officer", "cto"]
+          }
+        ]
+      }
+    },
+    "data_loss_prevention": {
+      "enabled": true,
+      "monitoring": {
+        "email_scanning": true,
+        "file_transfer_monitoring": true,
+        "clipboard_monitoring": true,
+        "screen_capture_prevention": true,
+        "usb_device_control": true
+      },
+      "content_inspection": {
+        "deep_content_analysis": true,
+        "machine_learning": true,
+        "pattern_matching": true,
+        "contextual_analysis": true
+      },
+      "actions": {
+        "block": true,
+        "quarantine": true,
+        "encrypt": true,
+        "alert": true,
+        "audit": true
+      },
+      "policies": [
+        {
+          "name": "client_data_protection",
+          "description": "Prevent unauthorized disclosure of client data",
+          "conditions": [
+            "contains_ssn",
+            "contains_account_number",
+            "contains_financial_data"
+          ],
+          "actions": ["block", "alert", "audit"]
+        },
+        {
+          "name": "trading_information_protection",
+          "description": "Prevent insider trading through data leakage",
+          "conditions": [
+            "contains_material_nonpublic_info",
+            "contains_trading_strategies",
+            "contains_research_reports"
+          ],
+          "actions": ["quarantine", "alert", "audit"]
+        }
+      ]
+    },
+    "privacy_controls": {
+      "gdpr_compliance": {
+        "enabled": true,
+        "lawful_basis_tracking": true,
+        "consent_management": {
+          "granular_consent": true,
+          "consent_withdrawal": true,
+          "consent_history": true,
+          "consent_proof": true
+        },
+        "data_subject_rights": {
+          "right_of_access": {
+            "enabled": true,
+            "response_time": "30_days",
+            "automated_response": true
+          },
+          "right_to_rectification": {
+            "enabled": true,
+            "verification_required": true,
+            "audit_trail": true
+          },
+          "right_to_erasure": {
+            "enabled": true,
+            "exceptions": [
+              "legal_obligation",
+              "regulatory_requirement",
+              "contract_performance"
+            ],
+            "verification_required": true
+          },
+          "right_to_portability": {
+            "enabled": true,
+            "format": "structured_machine_readable",
+            "encryption": true
+          },
+          "right_to_object": {
+            "enabled": true,
+            "automated_processing": true,
+            "direct_marketing": true
+          }
+        }
+      },
+      "ccpa_compliance": {
+        "enabled": true,
+        "consumer_rights": {
+          "right_to_know": true,
+          "right_to_delete": true,
+          "right_to_opt_out": true,
+          "right_to_non_discrimination": true
+        },
+        "sale_of_personal_info": {
+          "tracking": true,
+          "opt_out_mechanism": true,
+          "third_party_disclosure": true
+        }
+      },
+      "data_minimization": {
+        "enabled": true,
+        "collection_limitation": true,
+        "purpose_limitation": true,
+        "retention_limitation": true,
+        "automated_deletion": true
+      }
+    },
+    "audit_and_monitoring": {
+      "comprehensive_logging": {
+        "enabled": true,
+        "log_levels": ["access", "modification", "deletion", "export"],
+        "log_retention": "7_years",
+        "log_encryption": true,
+        "log_integrity": "digital_signatures"
+      },
+      "real_time_monitoring": {
+        "enabled": true,
+        "anomaly_detection": true,
+        "behavioral_analysis": true,
+        "threat_intelligence": true,
+        "automated_response": true
+      },
+      "compliance_reporting": {
+        "automated_reports": true,
+        "regulatory_templates": [
+          "SOX_404",
+          "GDPR_Article_30",
+          "CCPA_Privacy_Report"
+        ],
+        "executive_dashboards": true,
+        "trend_analysis": true
+      },
+      "incident_response": {
+        "automated_detection": true,
+        "escalation_procedures": true,
+        "containment_actions": true,
+        "forensic_capabilities": true,
+        "regulatory_notification": true
+      }
+    },
+    "data_retention": {
+      "policies": [
+        {
+          "data_type": "client_personal_data",
+          "retention_period": "7_years_after_relationship_end",
+          "legal_basis": "regulatory_requirement",
+          "deletion_method": "secure_overwrite"
+        },
+        {
+          "data_type": "transaction_records",
+          "retention_period": "5_years",
+          "legal_basis": "sec_requirement",
+          "deletion_method": "cryptographic_erasure"
+        },
+        {
+          "data_type": "communication_records",
+          "retention_period": "3_years",
+          "legal_basis": "finra_requirement",
+          "deletion_method": "secure_overwrite"
+        },
+        {
+          "data_type": "audit_logs",
+          "retention_period": "7_years",
+          "legal_basis": "sox_requirement",
+          "deletion_method": "archive_then_delete"
+        },
+        {
+          "data_type": "marketing_data",
+          "retention_period": "2_years_or_consent_withdrawal",
+          "legal_basis": "consent",
+          "deletion_method": "immediate_deletion"
+        }
+      ],
+      "automated_lifecycle": {
+        "enabled": true,
+        "classification_based": true,
+        "legal_hold_support": true,
+        "deletion_verification": true
+      }
+    },
+    "third_party_data_sharing": {
+      "data_processing_agreements": {
+        "required": true,
+        "template_enforcement": true,
+        "compliance_monitoring": true,
+        "regular_audits": true
+      },
+      "vendor_risk_assessment": {
+        "security_questionnaires": true,
+        "certification_requirements": [
+          "SOC_2_Type_II",
+          "ISO_27001",
+          "PCI_DSS"
+        ],
+        "ongoing_monitoring": true,
+        "contract_compliance": true
+      },
+      "data_transfer_controls": {
+        "encryption_required": true,
+        "secure_channels": true,
+        "transfer_logging": true,
+        "recipient_verification": true
+      }
+    }
+  },
+  "integration": {
+    "identity_providers": [
+      "active_directory",
+      "okta",
+      "azure_ad",
+      "ping_identity"
+    ],
+    "security_tools": [
+      "siem",
+      "dlp",
+      "casb",
+      "ueba",
+      "threat_intelligence"
+    ],
+    "compliance_platforms": [
+      "governance_risk_compliance",
+      "privacy_management",
+      "audit_management"
+    ]
+  },
+  "performance": {
+    "encryption_optimization": true,
+    "caching_strategies": true,
+    "load_balancing": true,
+    "performance_monitoring": true
+  },
+  "disaster_recovery": {
+    "backup_encryption": true,
+    "geo_redundancy": true,
+    "recovery_testing": "quarterly",
+    "rto": "4_hours",
+    "rpo": "1_hour"
+  }
+}
+

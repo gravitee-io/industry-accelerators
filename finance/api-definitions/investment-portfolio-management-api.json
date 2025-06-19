@@ -1,0 +1,2127 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Investment Portfolio Management API",
+    "description": "Comprehensive investment portfolio management API for wealth management firms, investment advisors, and institutional investors. Provides real-time portfolio analytics, performance attribution, risk management, and regulatory compliance features.",
+    "version": "2.1.0",
+    "contact": {
+      "name": "Investment API Support",
+      "email": "api-support@wealthcorp.com",
+      "url": "https://developer.wealthcorp.com/support"
+    },
+    "license": {
+      "name": "Commercial License",
+      "url": "https://wealthcorp.com/api-license"
+    },
+    "termsOfService": "https://wealthcorp.com/terms-of-service"
+  },
+  "servers": [
+    {
+      "url": "https://api.wealthcorp.com/v2",
+      "description": "Production Investment API Server"
+    },
+    {
+      "url": "https://sandbox-api.wealthcorp.com/v2",
+      "description": "Sandbox Investment API Server"
+    }
+  ],
+  "security": [
+    {
+      "oauth2": [
+        "portfolio:read",
+        "portfolio:write",
+        "trading:execute",
+        "client:read",
+        "compliance:read"
+      ]
+    }
+  ],
+  "paths": {
+    "/portfolios": {
+      "get": {
+        "summary": "List Portfolios",
+        "description": "Retrieve a list of investment portfolios with filtering and pagination support",
+        "operationId": "listPortfolios",
+        "parameters": [
+          {
+            "name": "client_id",
+            "in": "query",
+            "description": "Filter portfolios by client ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "advisor_id",
+            "in": "query",
+            "description": "Filter portfolios by advisor ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "portfolio_type",
+            "in": "query",
+            "description": "Filter by portfolio type",
+            "schema": {
+              "type": "string",
+              "enum": ["taxable", "ira", "roth_ira", "401k", "trust", "corporate"]
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "description": "Filter by portfolio status",
+            "schema": {
+              "type": "string",
+              "enum": ["active", "inactive", "closed", "pending"]
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Maximum number of portfolios to return",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "description": "Number of portfolios to skip",
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of portfolios",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PortfolioList"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "security": [
+          {
+            "oauth2": ["portfolio:read"]
+          }
+        ]
+      },
+      "post": {
+        "summary": "Create Portfolio",
+        "description": "Create a new investment portfolio with initial configuration",
+        "operationId": "createPortfolio",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePortfolioRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Portfolio created successfully",
+            "headers": {
+              "Location": {
+                "description": "URL of the created portfolio",
+                "schema": {
+                  "type": "string",
+                  "format": "uri"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Portfolio"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "security": [
+          {
+            "oauth2": ["portfolio:write"]
+          }
+        ]
+      }
+    },
+    "/portfolios/{portfolio_id}": {
+      "get": {
+        "summary": "Get Portfolio",
+        "description": "Retrieve detailed information about a specific portfolio",
+        "operationId": "getPortfolio",
+        "parameters": [
+          {
+            "name": "portfolio_id",
+            "in": "path",
+            "required": true,
+            "description": "Portfolio identifier",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "include_positions",
+            "in": "query",
+            "description": "Include current positions in response",
+            "schema": {
+              "type": "boolean",
+              "default": true
+            }
+          },
+          {
+            "name": "include_performance",
+            "in": "query",
+            "description": "Include performance metrics in response",
+            "schema": {
+              "type": "boolean",
+              "default": true
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Portfolio details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Portfolio"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "security": [
+          {
+            "oauth2": ["portfolio:read"]
+          }
+        ]
+      },
+      "put": {
+        "summary": "Update Portfolio",
+        "description": "Update portfolio configuration and settings",
+        "operationId": "updatePortfolio",
+        "parameters": [
+          {
+            "name": "portfolio_id",
+            "in": "path",
+            "required": true,
+            "description": "Portfolio identifier",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePortfolioRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Portfolio updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Portfolio"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "security": [
+          {
+            "oauth2": ["portfolio:write"]
+          }
+        ]
+      }
+    },
+    "/portfolios/{portfolio_id}/positions": {
+      "get": {
+        "summary": "Get Portfolio Positions",
+        "description": "Retrieve current positions for a portfolio with real-time market values",
+        "operationId": "getPortfolioPositions",
+        "parameters": [
+          {
+            "name": "portfolio_id",
+            "in": "path",
+            "required": true,
+            "description": "Portfolio identifier",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "asset_class",
+            "in": "query",
+            "description": "Filter positions by asset class",
+            "schema": {
+              "type": "string",
+              "enum": ["equity", "fixed_income", "alternative", "cash", "commodity", "real_estate"]
+            }
+          },
+          {
+            "name": "include_lots",
+            "in": "query",
+            "description": "Include tax lot details",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Portfolio positions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PositionList"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "security": [
+          {
+            "oauth2": ["portfolio:read"]
+          }
+        ]
+      }
+    },
+    "/portfolios/{portfolio_id}/performance": {
+      "get": {
+        "summary": "Get Portfolio Performance",
+        "description": "Retrieve performance analytics and attribution for a portfolio",
+        "operationId": "getPortfolioPerformance",
+        "parameters": [
+          {
+            "name": "portfolio_id",
+            "in": "path",
+            "required": true,
+            "description": "Portfolio identifier",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "start_date",
+            "in": "query",
+            "description": "Performance calculation start date",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "end_date",
+            "in": "query",
+            "description": "Performance calculation end date",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "benchmark",
+            "in": "query",
+            "description": "Benchmark for performance comparison",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "frequency",
+            "in": "query",
+            "description": "Performance calculation frequency",
+            "schema": {
+              "type": "string",
+              "enum": ["daily", "weekly", "monthly", "quarterly", "annually"],
+              "default": "monthly"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Portfolio performance metrics",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PerformanceAnalytics"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "security": [
+          {
+            "oauth2": ["portfolio:read"]
+          }
+        ]
+      }
+    },
+    "/portfolios/{portfolio_id}/risk": {
+      "get": {
+        "summary": "Get Portfolio Risk Metrics",
+        "description": "Retrieve comprehensive risk analytics for a portfolio",
+        "operationId": "getPortfolioRisk",
+        "parameters": [
+          {
+            "name": "portfolio_id",
+            "in": "path",
+            "required": true,
+            "description": "Portfolio identifier",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "risk_model",
+            "in": "query",
+            "description": "Risk model to use for calculations",
+            "schema": {
+              "type": "string",
+              "enum": ["var", "cvar", "monte_carlo", "stress_test"],
+              "default": "var"
+            }
+          },
+          {
+            "name": "confidence_level",
+            "in": "query",
+            "description": "Confidence level for VaR calculations",
+            "schema": {
+              "type": "number",
+              "minimum": 0.9,
+              "maximum": 0.99,
+              "default": 0.95
+            }
+          },
+          {
+            "name": "time_horizon",
+            "in": "query",
+            "description": "Time horizon for risk calculations (days)",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 252,
+              "default": 21
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Portfolio risk metrics",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RiskAnalytics"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "security": [
+          {
+            "oauth2": ["portfolio:read"]
+          }
+        ]
+      }
+    },
+    "/portfolios/{portfolio_id}/rebalance": {
+      "post": {
+        "summary": "Rebalance Portfolio",
+        "description": "Generate rebalancing recommendations or execute portfolio rebalancing",
+        "operationId": "rebalancePortfolio",
+        "parameters": [
+          {
+            "name": "portfolio_id",
+            "in": "path",
+            "required": true,
+            "description": "Portfolio identifier",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RebalanceRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Rebalancing recommendations or execution results",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RebalanceResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "security": [
+          {
+            "oauth2": ["portfolio:write", "trading:execute"]
+          }
+        ]
+      }
+    },
+    "/orders": {
+      "get": {
+        "summary": "List Orders",
+        "description": "Retrieve a list of trading orders with filtering and pagination",
+        "operationId": "listOrders",
+        "parameters": [
+          {
+            "name": "portfolio_id",
+            "in": "query",
+            "description": "Filter orders by portfolio ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "description": "Filter orders by status",
+            "schema": {
+              "type": "string",
+              "enum": ["pending", "submitted", "filled", "partially_filled", "cancelled", "rejected"]
+            }
+          },
+          {
+            "name": "order_type",
+            "in": "query",
+            "description": "Filter orders by type",
+            "schema": {
+              "type": "string",
+              "enum": ["market", "limit", "stop", "stop_limit", "trailing_stop"]
+            }
+          },
+          {
+            "name": "start_date",
+            "in": "query",
+            "description": "Filter orders from this date",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "end_date",
+            "in": "query",
+            "description": "Filter orders to this date",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of orders",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrderList"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "security": [
+          {
+            "oauth2": ["trading:read"]
+          }
+        ]
+      },
+      "post": {
+        "summary": "Create Order",
+        "description": "Submit a new trading order for execution",
+        "operationId": "createOrder",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateOrderRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Order created successfully",
+            "headers": {
+              "Location": {
+                "description": "URL of the created order",
+                "schema": {
+                  "type": "string",
+                  "format": "uri"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Order"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "security": [
+          {
+            "oauth2": ["trading:execute"]
+          }
+        ]
+      }
+    },
+    "/orders/{order_id}": {
+      "get": {
+        "summary": "Get Order",
+        "description": "Retrieve detailed information about a specific order",
+        "operationId": "getOrder",
+        "parameters": [
+          {
+            "name": "order_id",
+            "in": "path",
+            "required": true,
+            "description": "Order identifier",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Order details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Order"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "security": [
+          {
+            "oauth2": ["trading:read"]
+          }
+        ]
+      },
+      "delete": {
+        "summary": "Cancel Order",
+        "description": "Cancel a pending or partially filled order",
+        "operationId": "cancelOrder",
+        "parameters": [
+          {
+            "name": "order_id",
+            "in": "path",
+            "required": true,
+            "description": "Order identifier",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Order cancelled successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Order"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "security": [
+          {
+            "oauth2": ["trading:execute"]
+          }
+        ]
+      }
+    },
+    "/market-data/quotes": {
+      "get": {
+        "summary": "Get Market Quotes",
+        "description": "Retrieve real-time or delayed market quotes for securities",
+        "operationId": "getMarketQuotes",
+        "parameters": [
+          {
+            "name": "symbols",
+            "in": "query",
+            "required": true,
+            "description": "Comma-separated list of security symbols",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "fields",
+            "in": "query",
+            "description": "Comma-separated list of quote fields to return",
+            "schema": {
+              "type": "string",
+              "default": "last_price,bid,ask,volume"
+            }
+          },
+          {
+            "name": "real_time",
+            "in": "query",
+            "description": "Request real-time quotes (requires appropriate permissions)",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Market quotes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MarketQuotes"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "security": [
+          {
+            "oauth2": ["market_data:read"]
+          }
+        ]
+      }
+    },
+    "/clients/{client_id}/goals": {
+      "get": {
+        "summary": "Get Client Goals",
+        "description": "Retrieve financial goals for a client",
+        "operationId": "getClientGoals",
+        "parameters": [
+          {
+            "name": "client_id",
+            "in": "path",
+            "required": true,
+            "description": "Client identifier",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Client financial goals",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FinancialGoals"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "security": [
+          {
+            "oauth2": ["client:read"]
+          }
+        ]
+      }
+    },
+    "/compliance/reports": {
+      "get": {
+        "summary": "Get Compliance Reports",
+        "description": "Retrieve regulatory compliance reports",
+        "operationId": "getComplianceReports",
+        "parameters": [
+          {
+            "name": "report_type",
+            "in": "query",
+            "description": "Type of compliance report",
+            "schema": {
+              "type": "string",
+              "enum": ["sec_filing", "finra_report", "mifid_transaction", "trade_surveillance"]
+            }
+          },
+          {
+            "name": "start_date",
+            "in": "query",
+            "description": "Report period start date",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "end_date",
+            "in": "query",
+            "description": "Report period end date",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Compliance reports",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComplianceReports"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "security": [
+          {
+            "oauth2": ["compliance:read"]
+          }
+        ]
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "oauth2": {
+        "type": "oauth2",
+        "description": "OAuth 2.0 authentication with financial services specific scopes",
+        "flows": {
+          "authorizationCode": {
+            "authorizationUrl": "https://auth.wealthcorp.com/oauth2/authorize",
+            "tokenUrl": "https://auth.wealthcorp.com/oauth2/token",
+            "scopes": {
+              "portfolio:read": "Read access to portfolio data",
+              "portfolio:write": "Write access to portfolio data",
+              "trading:read": "Read access to trading data",
+              "trading:execute": "Execute trading operations",
+              "client:read": "Read access to client data",
+              "client:write": "Write access to client data",
+              "market_data:read": "Access to market data",
+              "compliance:read": "Access to compliance reports",
+              "admin": "Administrative access"
+            }
+          }
+        }
+      }
+    },
+    "schemas": {
+      "Portfolio": {
+        "type": "object",
+        "properties": {
+          "portfolio_id": {
+            "type": "string",
+            "description": "Unique portfolio identifier"
+          },
+          "client_id": {
+            "type": "string",
+            "description": "Client identifier"
+          },
+          "advisor_id": {
+            "type": "string",
+            "description": "Advisor identifier"
+          },
+          "name": {
+            "type": "string",
+            "description": "Portfolio name"
+          },
+          "description": {
+            "type": "string",
+            "description": "Portfolio description"
+          },
+          "portfolio_type": {
+            "type": "string",
+            "enum": ["taxable", "ira", "roth_ira", "401k", "trust", "corporate"],
+            "description": "Portfolio account type"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["active", "inactive", "closed", "pending"],
+            "description": "Portfolio status"
+          },
+          "inception_date": {
+            "type": "string",
+            "format": "date",
+            "description": "Portfolio inception date"
+          },
+          "base_currency": {
+            "type": "string",
+            "description": "Base currency for portfolio valuation"
+          },
+          "total_value": {
+            "type": "number",
+            "description": "Total portfolio value in base currency"
+          },
+          "cash_balance": {
+            "type": "number",
+            "description": "Cash balance in base currency"
+          },
+          "target_allocation": {
+            "$ref": "#/components/schemas/AssetAllocation"
+          },
+          "current_allocation": {
+            "$ref": "#/components/schemas/AssetAllocation"
+          },
+          "positions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Position"
+            }
+          },
+          "performance": {
+            "$ref": "#/components/schemas/PerformanceMetrics"
+          },
+          "risk_metrics": {
+            "$ref": "#/components/schemas/RiskMetrics"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": ["portfolio_id", "client_id", "name", "portfolio_type", "status", "base_currency"]
+      },
+      "Position": {
+        "type": "object",
+        "properties": {
+          "position_id": {
+            "type": "string",
+            "description": "Unique position identifier"
+          },
+          "security": {
+            "$ref": "#/components/schemas/Security"
+          },
+          "quantity": {
+            "type": "number",
+            "description": "Position quantity"
+          },
+          "market_value": {
+            "type": "number",
+            "description": "Current market value"
+          },
+          "cost_basis": {
+            "type": "number",
+            "description": "Total cost basis"
+          },
+          "unrealized_gain_loss": {
+            "type": "number",
+            "description": "Unrealized gain/loss"
+          },
+          "unrealized_gain_loss_percent": {
+            "type": "number",
+            "description": "Unrealized gain/loss percentage"
+          },
+          "weight": {
+            "type": "number",
+            "description": "Position weight in portfolio"
+          },
+          "asset_class": {
+            "type": "string",
+            "enum": ["equity", "fixed_income", "alternative", "cash", "commodity", "real_estate"],
+            "description": "Asset class classification"
+          },
+          "tax_lots": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TaxLot"
+            }
+          }
+        },
+        "required": ["position_id", "security", "quantity", "market_value", "asset_class"]
+      },
+      "Security": {
+        "type": "object",
+        "properties": {
+          "symbol": {
+            "type": "string",
+            "description": "Security symbol"
+          },
+          "cusip": {
+            "type": "string",
+            "description": "CUSIP identifier"
+          },
+          "isin": {
+            "type": "string",
+            "description": "ISIN identifier"
+          },
+          "name": {
+            "type": "string",
+            "description": "Security name"
+          },
+          "security_type": {
+            "type": "string",
+            "enum": ["stock", "bond", "mutual_fund", "etf", "option", "future", "commodity"],
+            "description": "Security type"
+          },
+          "exchange": {
+            "type": "string",
+            "description": "Primary exchange"
+          },
+          "currency": {
+            "type": "string",
+            "description": "Trading currency"
+          },
+          "sector": {
+            "type": "string",
+            "description": "Industry sector"
+          },
+          "country": {
+            "type": "string",
+            "description": "Country of domicile"
+          }
+        },
+        "required": ["symbol", "name", "security_type"]
+      },
+      "Order": {
+        "type": "object",
+        "properties": {
+          "order_id": {
+            "type": "string",
+            "description": "Unique order identifier"
+          },
+          "portfolio_id": {
+            "type": "string",
+            "description": "Portfolio identifier"
+          },
+          "security": {
+            "$ref": "#/components/schemas/Security"
+          },
+          "side": {
+            "type": "string",
+            "enum": ["buy", "sell"],
+            "description": "Order side"
+          },
+          "order_type": {
+            "type": "string",
+            "enum": ["market", "limit", "stop", "stop_limit", "trailing_stop"],
+            "description": "Order type"
+          },
+          "quantity": {
+            "type": "number",
+            "description": "Order quantity"
+          },
+          "price": {
+            "type": "number",
+            "description": "Order price (for limit orders)"
+          },
+          "stop_price": {
+            "type": "number",
+            "description": "Stop price (for stop orders)"
+          },
+          "time_in_force": {
+            "type": "string",
+            "enum": ["day", "gtc", "ioc", "fok"],
+            "description": "Time in force"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["pending", "submitted", "filled", "partially_filled", "cancelled", "rejected"],
+            "description": "Order status"
+          },
+          "filled_quantity": {
+            "type": "number",
+            "description": "Filled quantity"
+          },
+          "average_fill_price": {
+            "type": "number",
+            "description": "Average fill price"
+          },
+          "commission": {
+            "type": "number",
+            "description": "Commission charged"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": ["order_id", "portfolio_id", "security", "side", "order_type", "quantity", "status"]
+      },
+      "PerformanceMetrics": {
+        "type": "object",
+        "properties": {
+          "total_return": {
+            "type": "number",
+            "description": "Total return percentage"
+          },
+          "annualized_return": {
+            "type": "number",
+            "description": "Annualized return percentage"
+          },
+          "volatility": {
+            "type": "number",
+            "description": "Annualized volatility"
+          },
+          "sharpe_ratio": {
+            "type": "number",
+            "description": "Sharpe ratio"
+          },
+          "sortino_ratio": {
+            "type": "number",
+            "description": "Sortino ratio"
+          },
+          "max_drawdown": {
+            "type": "number",
+            "description": "Maximum drawdown percentage"
+          },
+          "alpha": {
+            "type": "number",
+            "description": "Alpha vs benchmark"
+          },
+          "beta": {
+            "type": "number",
+            "description": "Beta vs benchmark"
+          },
+          "tracking_error": {
+            "type": "number",
+            "description": "Tracking error vs benchmark"
+          },
+          "information_ratio": {
+            "type": "number",
+            "description": "Information ratio"
+          }
+        }
+      },
+      "RiskMetrics": {
+        "type": "object",
+        "properties": {
+          "value_at_risk": {
+            "type": "number",
+            "description": "Value at Risk (VaR)"
+          },
+          "conditional_var": {
+            "type": "number",
+            "description": "Conditional Value at Risk (CVaR)"
+          },
+          "portfolio_beta": {
+            "type": "number",
+            "description": "Portfolio beta"
+          },
+          "concentration_risk": {
+            "type": "number",
+            "description": "Concentration risk score"
+          },
+          "sector_exposure": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "number"
+            },
+            "description": "Sector exposure percentages"
+          },
+          "country_exposure": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "number"
+            },
+            "description": "Country exposure percentages"
+          },
+          "currency_exposure": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "number"
+            },
+            "description": "Currency exposure percentages"
+          }
+        }
+      },
+      "AssetAllocation": {
+        "type": "object",
+        "properties": {
+          "equity": {
+            "type": "number",
+            "description": "Equity allocation percentage"
+          },
+          "fixed_income": {
+            "type": "number",
+            "description": "Fixed income allocation percentage"
+          },
+          "alternative": {
+            "type": "number",
+            "description": "Alternative investment allocation percentage"
+          },
+          "cash": {
+            "type": "number",
+            "description": "Cash allocation percentage"
+          },
+          "commodity": {
+            "type": "number",
+            "description": "Commodity allocation percentage"
+          },
+          "real_estate": {
+            "type": "number",
+            "description": "Real estate allocation percentage"
+          }
+        }
+      },
+      "TaxLot": {
+        "type": "object",
+        "properties": {
+          "lot_id": {
+            "type": "string",
+            "description": "Tax lot identifier"
+          },
+          "acquisition_date": {
+            "type": "string",
+            "format": "date",
+            "description": "Acquisition date"
+          },
+          "quantity": {
+            "type": "number",
+            "description": "Lot quantity"
+          },
+          "cost_per_share": {
+            "type": "number",
+            "description": "Cost per share"
+          },
+          "total_cost": {
+            "type": "number",
+            "description": "Total cost basis"
+          },
+          "term": {
+            "type": "string",
+            "enum": ["short", "long"],
+            "description": "Tax term (short/long)"
+          }
+        },
+        "required": ["lot_id", "acquisition_date", "quantity", "cost_per_share", "total_cost", "term"]
+      },
+      "CreatePortfolioRequest": {
+        "type": "object",
+        "properties": {
+          "client_id": {
+            "type": "string",
+            "description": "Client identifier"
+          },
+          "advisor_id": {
+            "type": "string",
+            "description": "Advisor identifier"
+          },
+          "name": {
+            "type": "string",
+            "description": "Portfolio name"
+          },
+          "description": {
+            "type": "string",
+            "description": "Portfolio description"
+          },
+          "portfolio_type": {
+            "type": "string",
+            "enum": ["taxable", "ira", "roth_ira", "401k", "trust", "corporate"],
+            "description": "Portfolio account type"
+          },
+          "base_currency": {
+            "type": "string",
+            "description": "Base currency for portfolio valuation"
+          },
+          "target_allocation": {
+            "$ref": "#/components/schemas/AssetAllocation"
+          },
+          "initial_cash": {
+            "type": "number",
+            "description": "Initial cash deposit"
+          }
+        },
+        "required": ["client_id", "name", "portfolio_type", "base_currency"]
+      },
+      "UpdatePortfolioRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Portfolio name"
+          },
+          "description": {
+            "type": "string",
+            "description": "Portfolio description"
+          },
+          "target_allocation": {
+            "$ref": "#/components/schemas/AssetAllocation"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["active", "inactive", "closed"],
+            "description": "Portfolio status"
+          }
+        }
+      },
+      "CreateOrderRequest": {
+        "type": "object",
+        "properties": {
+          "portfolio_id": {
+            "type": "string",
+            "description": "Portfolio identifier"
+          },
+          "symbol": {
+            "type": "string",
+            "description": "Security symbol"
+          },
+          "side": {
+            "type": "string",
+            "enum": ["buy", "sell"],
+            "description": "Order side"
+          },
+          "order_type": {
+            "type": "string",
+            "enum": ["market", "limit", "stop", "stop_limit", "trailing_stop"],
+            "description": "Order type"
+          },
+          "quantity": {
+            "type": "number",
+            "description": "Order quantity"
+          },
+          "price": {
+            "type": "number",
+            "description": "Order price (for limit orders)"
+          },
+          "stop_price": {
+            "type": "number",
+            "description": "Stop price (for stop orders)"
+          },
+          "time_in_force": {
+            "type": "string",
+            "enum": ["day", "gtc", "ioc", "fok"],
+            "description": "Time in force",
+            "default": "day"
+          }
+        },
+        "required": ["portfolio_id", "symbol", "side", "order_type", "quantity"]
+      },
+      "RebalanceRequest": {
+        "type": "object",
+        "properties": {
+          "target_allocation": {
+            "$ref": "#/components/schemas/AssetAllocation"
+          },
+          "rebalance_method": {
+            "type": "string",
+            "enum": ["threshold", "calendar", "tactical"],
+            "description": "Rebalancing method"
+          },
+          "threshold": {
+            "type": "number",
+            "description": "Rebalancing threshold percentage"
+          },
+          "execute": {
+            "type": "boolean",
+            "description": "Execute rebalancing trades",
+            "default": false
+          },
+          "tax_optimization": {
+            "type": "boolean",
+            "description": "Apply tax optimization",
+            "default": true
+          }
+        },
+        "required": ["target_allocation", "rebalance_method"]
+      },
+      "RebalanceResponse": {
+        "type": "object",
+        "properties": {
+          "recommendations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RebalanceRecommendation"
+            }
+          },
+          "executed_trades": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Order"
+            }
+          },
+          "estimated_cost": {
+            "type": "number",
+            "description": "Estimated transaction costs"
+          },
+          "tax_impact": {
+            "type": "number",
+            "description": "Estimated tax impact"
+          }
+        }
+      },
+      "RebalanceRecommendation": {
+        "type": "object",
+        "properties": {
+          "security": {
+            "$ref": "#/components/schemas/Security"
+          },
+          "action": {
+            "type": "string",
+            "enum": ["buy", "sell", "hold"],
+            "description": "Recommended action"
+          },
+          "quantity": {
+            "type": "number",
+            "description": "Recommended quantity"
+          },
+          "current_weight": {
+            "type": "number",
+            "description": "Current portfolio weight"
+          },
+          "target_weight": {
+            "type": "number",
+            "description": "Target portfolio weight"
+          },
+          "deviation": {
+            "type": "number",
+            "description": "Deviation from target"
+          }
+        }
+      },
+      "PortfolioList": {
+        "type": "object",
+        "properties": {
+          "portfolios": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Portfolio"
+            }
+          },
+          "total_count": {
+            "type": "integer",
+            "description": "Total number of portfolios"
+          },
+          "limit": {
+            "type": "integer",
+            "description": "Number of portfolios returned"
+          },
+          "offset": {
+            "type": "integer",
+            "description": "Number of portfolios skipped"
+          }
+        }
+      },
+      "PositionList": {
+        "type": "object",
+        "properties": {
+          "positions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Position"
+            }
+          },
+          "total_value": {
+            "type": "number",
+            "description": "Total value of all positions"
+          },
+          "as_of_date": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Data as of date"
+          }
+        }
+      },
+      "OrderList": {
+        "type": "object",
+        "properties": {
+          "orders": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Order"
+            }
+          },
+          "total_count": {
+            "type": "integer",
+            "description": "Total number of orders"
+          }
+        }
+      },
+      "MarketQuotes": {
+        "type": "object",
+        "properties": {
+          "quotes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Quote"
+            }
+          },
+          "as_of_time": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Quote timestamp"
+          },
+          "delayed": {
+            "type": "boolean",
+            "description": "Whether quotes are delayed"
+          }
+        }
+      },
+      "Quote": {
+        "type": "object",
+        "properties": {
+          "symbol": {
+            "type": "string",
+            "description": "Security symbol"
+          },
+          "last_price": {
+            "type": "number",
+            "description": "Last trade price"
+          },
+          "bid": {
+            "type": "number",
+            "description": "Bid price"
+          },
+          "ask": {
+            "type": "number",
+            "description": "Ask price"
+          },
+          "volume": {
+            "type": "integer",
+            "description": "Trading volume"
+          },
+          "change": {
+            "type": "number",
+            "description": "Price change"
+          },
+          "change_percent": {
+            "type": "number",
+            "description": "Price change percentage"
+          },
+          "high": {
+            "type": "number",
+            "description": "Day high"
+          },
+          "low": {
+            "type": "number",
+            "description": "Day low"
+          },
+          "open": {
+            "type": "number",
+            "description": "Opening price"
+          },
+          "previous_close": {
+            "type": "number",
+            "description": "Previous close price"
+          }
+        }
+      },
+      "PerformanceAnalytics": {
+        "type": "object",
+        "properties": {
+          "portfolio_id": {
+            "type": "string",
+            "description": "Portfolio identifier"
+          },
+          "start_date": {
+            "type": "string",
+            "format": "date",
+            "description": "Performance period start date"
+          },
+          "end_date": {
+            "type": "string",
+            "format": "date",
+            "description": "Performance period end date"
+          },
+          "metrics": {
+            "$ref": "#/components/schemas/PerformanceMetrics"
+          },
+          "attribution": {
+            "$ref": "#/components/schemas/PerformanceAttribution"
+          },
+          "benchmark_comparison": {
+            "$ref": "#/components/schemas/BenchmarkComparison"
+          },
+          "time_series": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PerformanceDataPoint"
+            }
+          }
+        }
+      },
+      "PerformanceAttribution": {
+        "type": "object",
+        "properties": {
+          "asset_allocation": {
+            "type": "number",
+            "description": "Asset allocation contribution"
+          },
+          "security_selection": {
+            "type": "number",
+            "description": "Security selection contribution"
+          },
+          "interaction": {
+            "type": "number",
+            "description": "Interaction effect"
+          },
+          "sector_attribution": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "number"
+            },
+            "description": "Sector-level attribution"
+          }
+        }
+      },
+      "BenchmarkComparison": {
+        "type": "object",
+        "properties": {
+          "benchmark_symbol": {
+            "type": "string",
+            "description": "Benchmark identifier"
+          },
+          "benchmark_name": {
+            "type": "string",
+            "description": "Benchmark name"
+          },
+          "portfolio_return": {
+            "type": "number",
+            "description": "Portfolio return"
+          },
+          "benchmark_return": {
+            "type": "number",
+            "description": "Benchmark return"
+          },
+          "excess_return": {
+            "type": "number",
+            "description": "Excess return vs benchmark"
+          },
+          "tracking_error": {
+            "type": "number",
+            "description": "Tracking error"
+          },
+          "information_ratio": {
+            "type": "number",
+            "description": "Information ratio"
+          }
+        }
+      },
+      "PerformanceDataPoint": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date",
+            "description": "Data point date"
+          },
+          "portfolio_value": {
+            "type": "number",
+            "description": "Portfolio value"
+          },
+          "return": {
+            "type": "number",
+            "description": "Period return"
+          },
+          "cumulative_return": {
+            "type": "number",
+            "description": "Cumulative return"
+          }
+        }
+      },
+      "RiskAnalytics": {
+        "type": "object",
+        "properties": {
+          "portfolio_id": {
+            "type": "string",
+            "description": "Portfolio identifier"
+          },
+          "as_of_date": {
+            "type": "string",
+            "format": "date",
+            "description": "Risk calculation date"
+          },
+          "metrics": {
+            "$ref": "#/components/schemas/RiskMetrics"
+          },
+          "stress_tests": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StressTest"
+            }
+          },
+          "scenario_analysis": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ScenarioAnalysis"
+            }
+          }
+        }
+      },
+      "StressTest": {
+        "type": "object",
+        "properties": {
+          "scenario_name": {
+            "type": "string",
+            "description": "Stress test scenario name"
+          },
+          "portfolio_impact": {
+            "type": "number",
+            "description": "Portfolio impact percentage"
+          },
+          "value_impact": {
+            "type": "number",
+            "description": "Value impact in base currency"
+          },
+          "worst_position": {
+            "type": "string",
+            "description": "Worst performing position"
+          },
+          "best_position": {
+            "type": "string",
+            "description": "Best performing position"
+          }
+        }
+      },
+      "ScenarioAnalysis": {
+        "type": "object",
+        "properties": {
+          "scenario_name": {
+            "type": "string",
+            "description": "Scenario name"
+          },
+          "probability": {
+            "type": "number",
+            "description": "Scenario probability"
+          },
+          "expected_return": {
+            "type": "number",
+            "description": "Expected return under scenario"
+          },
+          "volatility": {
+            "type": "number",
+            "description": "Expected volatility under scenario"
+          }
+        }
+      },
+      "FinancialGoals": {
+        "type": "object",
+        "properties": {
+          "client_id": {
+            "type": "string",
+            "description": "Client identifier"
+          },
+          "goals": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FinancialGoal"
+            }
+          }
+        }
+      },
+      "FinancialGoal": {
+        "type": "object",
+        "properties": {
+          "goal_id": {
+            "type": "string",
+            "description": "Goal identifier"
+          },
+          "name": {
+            "type": "string",
+            "description": "Goal name"
+          },
+          "description": {
+            "type": "string",
+            "description": "Goal description"
+          },
+          "goal_type": {
+            "type": "string",
+            "enum": ["retirement", "education", "home_purchase", "emergency_fund", "wealth_accumulation"],
+            "description": "Goal type"
+          },
+          "target_amount": {
+            "type": "number",
+            "description": "Target amount"
+          },
+          "target_date": {
+            "type": "string",
+            "format": "date",
+            "description": "Target date"
+          },
+          "current_value": {
+            "type": "number",
+            "description": "Current value towards goal"
+          },
+          "monthly_contribution": {
+            "type": "number",
+            "description": "Monthly contribution amount"
+          },
+          "probability_of_success": {
+            "type": "number",
+            "description": "Probability of achieving goal"
+          },
+          "recommended_allocation": {
+            "$ref": "#/components/schemas/AssetAllocation"
+          }
+        }
+      },
+      "ComplianceReports": {
+        "type": "object",
+        "properties": {
+          "reports": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ComplianceReport"
+            }
+          }
+        }
+      },
+      "ComplianceReport": {
+        "type": "object",
+        "properties": {
+          "report_id": {
+            "type": "string",
+            "description": "Report identifier"
+          },
+          "report_type": {
+            "type": "string",
+            "description": "Report type"
+          },
+          "period_start": {
+            "type": "string",
+            "format": "date",
+            "description": "Report period start"
+          },
+          "period_end": {
+            "type": "string",
+            "format": "date",
+            "description": "Report period end"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["draft", "submitted", "approved", "rejected"],
+            "description": "Report status"
+          },
+          "file_url": {
+            "type": "string",
+            "format": "uri",
+            "description": "Report file URL"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "error_code": {
+            "type": "string",
+            "description": "Error code"
+          },
+          "error_message": {
+            "type": "string",
+            "description": "Error message"
+          },
+          "details": {
+            "type": "object",
+            "description": "Additional error details"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Error timestamp"
+          },
+          "request_id": {
+            "type": "string",
+            "description": "Request identifier"
+          }
+        },
+        "required": ["error_code", "error_message", "timestamp", "request_id"]
+      }
+    },
+    "responses": {
+      "BadRequest": {
+        "description": "Bad Request - Invalid request parameters",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            }
+          }
+        }
+      },
+      "Unauthorized": {
+        "description": "Unauthorized - Authentication required",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            }
+          }
+        }
+      },
+      "Forbidden": {
+        "description": "Forbidden - Insufficient permissions",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            }
+          }
+        }
+      },
+      "NotFound": {
+        "description": "Not Found - Resource not found",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            }
+          }
+        }
+      },
+      "UnprocessableEntity": {
+        "description": "Unprocessable Entity - Validation failed",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            }
+          }
+        }
+      },
+      "InternalServerError": {
+        "description": "Internal Server Error",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            }
+          }
+        }
+      }
+    }
+  }
+}
+

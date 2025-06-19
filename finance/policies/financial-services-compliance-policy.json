@@ -1,0 +1,414 @@
+{
+  "name": "Financial Services Compliance Policy",
+  "description": "Comprehensive compliance policy for financial services APIs covering SEC, FINRA, MiFID II, and other regulatory requirements",
+  "type": "policy-group",
+  "version": "2.1.0",
+  "enabled": true,
+  "policies": [
+    {
+      "name": "SEC Compliance Validation",
+      "type": "request-validation",
+      "enabled": true,
+      "configuration": {
+        "validation_rules": [
+          {
+            "field": "client_id",
+            "required": true,
+            "validation": "regex",
+            "pattern": "^[A-Z0-9]{8,12}$",
+            "error_message": "Client ID must be 8-12 alphanumeric characters"
+          },
+          {
+            "field": "advisor_id",
+            "required": true,
+            "validation": "regex",
+            "pattern": "^ADV[0-9]{6,10}$",
+            "error_message": "Advisor ID must follow SEC format (ADV + 6-10 digits)"
+          },
+          {
+            "field": "investment_amount",
+            "validation": "range",
+            "min": 0,
+            "max": 10000000,
+            "error_message": "Investment amount must be between $0 and $10,000,000"
+          }
+        ],
+        "sec_reporting": {
+          "enabled": true,
+          "report_threshold": 100000,
+          "report_frequency": "quarterly",
+          "filing_requirements": [
+            "Form ADV",
+            "Form 13F",
+            "Form PF"
+          ]
+        }
+      }
+    },
+    {
+      "name": "FINRA Trade Surveillance",
+      "type": "monitoring",
+      "enabled": true,
+      "configuration": {
+        "surveillance_rules": [
+          {
+            "rule_name": "Wash Sale Detection",
+            "description": "Detect potential wash sale violations",
+            "conditions": [
+              {
+                "field": "security_symbol",
+                "operator": "equals",
+                "value": "{previous_sale_symbol}"
+              },
+              {
+                "field": "time_difference",
+                "operator": "less_than",
+                "value": "30_days"
+              },
+              {
+                "field": "transaction_type",
+                "operator": "equals",
+                "value": "buy"
+              }
+            ],
+            "action": "flag_for_review",
+            "severity": "medium"
+          },
+          {
+            "rule_name": "Excessive Trading",
+            "description": "Monitor for excessive trading patterns",
+            "conditions": [
+              {
+                "field": "daily_trade_count",
+                "operator": "greater_than",
+                "value": 50
+              },
+              {
+                "field": "account_type",
+                "operator": "equals",
+                "value": "retail"
+              }
+            ],
+            "action": "require_approval",
+            "severity": "high"
+          },
+          {
+            "rule_name": "Suitability Check",
+            "description": "Verify investment suitability",
+            "conditions": [
+              {
+                "field": "risk_tolerance",
+                "operator": "less_than",
+                "value": "{investment_risk_level}"
+              }
+            ],
+            "action": "block_transaction",
+            "severity": "critical"
+          }
+        ],
+        "reporting": {
+          "blue_sheets": true,
+          "large_trader_reporting": true,
+          "order_audit_trail": true
+        }
+      }
+    },
+    {
+      "name": "MiFID II Transaction Reporting",
+      "type": "audit-logging",
+      "enabled": true,
+      "configuration": {
+        "transaction_reporting": {
+          "enabled": true,
+          "reporting_fields": [
+            "transaction_id",
+            "client_id",
+            "instrument_id",
+            "venue",
+            "quantity",
+            "price",
+            "timestamp",
+            "side",
+            "order_type",
+            "execution_timestamp"
+          ],
+          "real_time_reporting": true,
+          "t1_reporting": true,
+          "arm_reporting": true
+        },
+        "best_execution": {
+          "enabled": true,
+          "venue_analysis": true,
+          "execution_quality_monitoring": true,
+          "client_reporting": "quarterly"
+        },
+        "client_categorization": {
+          "retail": {
+            "protection_level": "high",
+            "disclosure_requirements": "enhanced",
+            "appropriateness_test": true
+          },
+          "professional": {
+            "protection_level": "medium",
+            "disclosure_requirements": "standard",
+            "appropriateness_test": false
+          },
+          "eligible_counterparty": {
+            "protection_level": "low",
+            "disclosure_requirements": "minimal",
+            "appropriateness_test": false
+          }
+        }
+      }
+    },
+    {
+      "name": "Anti-Money Laundering (AML)",
+      "type": "fraud-detection",
+      "enabled": true,
+      "configuration": {
+        "transaction_monitoring": {
+          "enabled": true,
+          "threshold_monitoring": {
+            "cash_transactions": 10000,
+            "wire_transfers": 3000,
+            "structured_transactions": true
+          },
+          "pattern_detection": [
+            "rapid_movement_of_funds",
+            "unusual_trading_patterns",
+            "high_risk_jurisdictions",
+            "politically_exposed_persons"
+          ],
+          "sanctions_screening": {
+            "enabled": true,
+            "lists": [
+              "OFAC_SDN",
+              "EU_Sanctions",
+              "UN_Sanctions",
+              "PEP_Lists"
+            ],
+            "real_time_screening": true
+          }
+        },
+        "customer_due_diligence": {
+          "kyc_verification": true,
+          "enhanced_due_diligence_threshold": 25000,
+          "ongoing_monitoring": true,
+          "risk_assessment": {
+            "customer_risk_factors": [
+              "geographic_location",
+              "business_type",
+              "transaction_patterns",
+              "source_of_funds"
+            ],
+            "risk_scoring": "automated"
+          }
+        },
+        "suspicious_activity_reporting": {
+          "enabled": true,
+          "auto_filing": false,
+          "review_threshold": 5000,
+          "investigation_workflow": true
+        }
+      }
+    },
+    {
+      "name": "Data Protection and Privacy",
+      "type": "data-protection",
+      "enabled": true,
+      "configuration": {
+        "gdpr_compliance": {
+          "enabled": true,
+          "data_minimization": true,
+          "purpose_limitation": true,
+          "consent_management": {
+            "explicit_consent": true,
+            "consent_withdrawal": true,
+            "consent_tracking": true
+          },
+          "data_subject_rights": {
+            "right_of_access": true,
+            "right_to_rectification": true,
+            "right_to_erasure": true,
+            "right_to_portability": true,
+            "right_to_object": true
+          }
+        },
+        "data_encryption": {
+          "encryption_at_rest": "AES-256",
+          "encryption_in_transit": "TLS-1.3",
+          "key_management": "HSM",
+          "field_level_encryption": [
+            "ssn",
+            "account_numbers",
+            "personal_identifiers"
+          ]
+        },
+        "data_retention": {
+          "client_data": "7_years",
+          "transaction_data": "5_years",
+          "communication_records": "3_years",
+          "audit_logs": "7_years",
+          "automatic_deletion": true
+        },
+        "access_controls": {
+          "role_based_access": true,
+          "attribute_based_access": true,
+          "need_to_know_principle": true,
+          "segregation_of_duties": true
+        }
+      }
+    },
+    {
+      "name": "Market Data Compliance",
+      "type": "rate-limiting",
+      "enabled": true,
+      "configuration": {
+        "exchange_agreements": {
+          "nyse": {
+            "real_time_data": true,
+            "redistribution_allowed": false,
+            "display_requirements": "professional_use_only"
+          },
+          "nasdaq": {
+            "real_time_data": true,
+            "redistribution_allowed": false,
+            "display_requirements": "professional_use_only"
+          },
+          "cboe": {
+            "real_time_data": true,
+            "redistribution_allowed": false,
+            "display_requirements": "professional_use_only"
+          }
+        },
+        "usage_monitoring": {
+          "enabled": true,
+          "user_tracking": true,
+          "device_tracking": true,
+          "redistribution_detection": true
+        },
+        "rate_limits": {
+          "real_time_quotes": {
+            "requests_per_second": 100,
+            "burst_limit": 500,
+            "daily_limit": 1000000
+          },
+          "historical_data": {
+            "requests_per_minute": 60,
+            "daily_limit": 10000
+          }
+        }
+      }
+    },
+    {
+      "name": "Fiduciary Duty Compliance",
+      "type": "business-logic",
+      "enabled": true,
+      "configuration": {
+        "best_interest_standard": {
+          "enabled": true,
+          "suitability_analysis": true,
+          "cost_analysis": true,
+          "conflict_of_interest_disclosure": true
+        },
+        "fee_transparency": {
+          "enabled": true,
+          "fee_disclosure": "comprehensive",
+          "fee_calculation": "transparent",
+          "fee_comparison": true
+        },
+        "investment_advice": {
+          "documentation_required": true,
+          "rationale_recording": true,
+          "periodic_review": "quarterly",
+          "client_acknowledgment": true
+        },
+        "conflict_management": {
+          "identification": "automated",
+          "disclosure": "mandatory",
+          "mitigation": "required",
+          "monitoring": "continuous"
+        }
+      }
+    },
+    {
+      "name": "Operational Risk Management",
+      "type": "circuit-breaker",
+      "enabled": true,
+      "configuration": {
+        "position_limits": {
+          "enabled": true,
+          "individual_position_limit": 0.05,
+          "sector_concentration_limit": 0.25,
+          "single_issuer_limit": 0.10,
+          "leverage_limit": 2.0
+        },
+        "trading_limits": {
+          "daily_trading_limit": 1000000,
+          "order_size_limit": 100000,
+          "price_deviation_limit": 0.05,
+          "velocity_checks": true
+        },
+        "system_controls": {
+          "kill_switch": true,
+          "order_throttling": true,
+          "pre_trade_risk_checks": true,
+          "post_trade_monitoring": true
+        },
+        "business_continuity": {
+          "disaster_recovery": true,
+          "backup_systems": true,
+          "failover_procedures": true,
+          "recovery_time_objective": "4_hours"
+        }
+      }
+    }
+  ],
+  "error_handling": {
+    "compliance_violation": {
+      "action": "block_request",
+      "notification": "immediate",
+      "escalation": "compliance_team",
+      "documentation": "required"
+    },
+    "regulatory_breach": {
+      "action": "emergency_stop",
+      "notification": "immediate",
+      "escalation": "executive_team",
+      "external_reporting": "required"
+    },
+    "data_breach": {
+      "action": "isolate_system",
+      "notification": "immediate",
+      "escalation": "security_team",
+      "regulatory_notification": "72_hours"
+    }
+  },
+  "monitoring": {
+    "real_time_alerts": true,
+    "compliance_dashboard": true,
+    "regulatory_reporting": "automated",
+    "audit_trail": "comprehensive",
+    "performance_metrics": [
+      "compliance_rate",
+      "violation_count",
+      "response_time",
+      "false_positive_rate"
+    ]
+  },
+  "integration": {
+    "regulatory_systems": [
+      "FINRA_OATS",
+      "SEC_EDGAR",
+      "CFTC_SDR",
+      "ESMA_FIRDS"
+    ],
+    "third_party_services": [
+      "sanctions_screening",
+      "kyc_verification",
+      "credit_checks",
+      "market_data_vendors"
+    ]
+  }
+}
+

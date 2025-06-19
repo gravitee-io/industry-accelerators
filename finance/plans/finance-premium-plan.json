@@ -1,0 +1,436 @@
+{
+  "name": "Finance Premium Plan",
+  "description": "Premium access plan for financial services with high-frequency trading support, advanced security, and comprehensive compliance features",
+  "type": "premium",
+  "version": "2.0.0",
+  "enabled": true,
+  "configuration": {
+    "rate_limiting": {
+      "requests_per_second": 1000,
+      "burst_limit": 5000,
+      "requests_per_minute": 50000,
+      "requests_per_hour": 2000000,
+      "requests_per_day": 20000000,
+      "requests_per_month": 500000000,
+      "concurrent_connections": 100,
+      "connection_timeout": "30s",
+      "read_timeout": "10s",
+      "write_timeout": "10s"
+    },
+    "quotas": {
+      "api_calls": {
+        "monthly_limit": 500000000,
+        "overage_allowed": true,
+        "overage_rate": 0.001,
+        "warning_thresholds": [0.8, 0.9, 0.95]
+      },
+      "data_transfer": {
+        "monthly_limit_gb": 10000,
+        "overage_allowed": true,
+        "overage_rate_per_gb": 0.10
+      },
+      "storage": {
+        "limit_gb": 1000,
+        "backup_included": true,
+        "retention_period": "7_years"
+      }
+    },
+    "security": {
+      "authentication": {
+        "oauth2": {
+          "enabled": true,
+          "flows": ["authorization_code", "client_credentials"],
+          "token_lifetime": "1_hour",
+          "refresh_token_lifetime": "30_days",
+          "scopes": [
+            "portfolio:read",
+            "portfolio:write",
+            "trading:execute",
+            "market_data:real_time",
+            "client:read",
+            "client:write",
+            "compliance:read",
+            "risk:read",
+            "admin"
+          ]
+        },
+        "api_keys": {
+          "enabled": true,
+          "key_rotation": "quarterly",
+          "key_strength": "256_bit",
+          "rate_limit_per_key": true
+        },
+        "mutual_tls": {
+          "enabled": true,
+          "certificate_validation": "strict",
+          "certificate_pinning": true,
+          "revocation_checking": true
+        },
+        "jwt": {
+          "enabled": true,
+          "algorithm": "RS256",
+          "key_rotation": "monthly",
+          "audience_validation": true,
+          "issuer_validation": true
+        }
+      },
+      "authorization": {
+        "rbac": {
+          "enabled": true,
+          "fine_grained_permissions": true,
+          "dynamic_roles": true,
+          "role_hierarchy": true
+        },
+        "abac": {
+          "enabled": true,
+          "context_aware": true,
+          "policy_engine": "opa",
+          "real_time_evaluation": true
+        },
+        "resource_level_security": {
+          "enabled": true,
+          "client_isolation": true,
+          "portfolio_isolation": true,
+          "data_segregation": true
+        }
+      },
+      "encryption": {
+        "api_traffic": "TLS_1.3",
+        "payload_encryption": "AES_256_GCM",
+        "key_management": "HSM",
+        "perfect_forward_secrecy": true
+      },
+      "threat_protection": {
+        "ddos_protection": {
+          "enabled": true,
+          "threshold": "10000_rps",
+          "mitigation": "automatic",
+          "geo_blocking": true
+        },
+        "bot_protection": {
+          "enabled": true,
+          "machine_learning": true,
+          "behavioral_analysis": true,
+          "captcha_integration": true
+        },
+        "injection_protection": {
+          "sql_injection": true,
+          "xss_protection": true,
+          "command_injection": true,
+          "ldap_injection": true
+        },
+        "anomaly_detection": {
+          "enabled": true,
+          "baseline_learning": true,
+          "real_time_scoring": true,
+          "automated_blocking": true
+        }
+      }
+    },
+    "compliance": {
+      "regulatory_frameworks": [
+        "SEC",
+        "FINRA",
+        "CFTC",
+        "MiFID_II",
+        "GDPR",
+        "CCPA",
+        "SOX",
+        "Basel_III"
+      ],
+      "audit_logging": {
+        "enabled": true,
+        "comprehensive_logging": true,
+        "real_time_monitoring": true,
+        "log_retention": "7_years",
+        "log_encryption": true,
+        "tamper_protection": true
+      },
+      "data_governance": {
+        "data_classification": true,
+        "data_lineage": true,
+        "data_quality": true,
+        "privacy_controls": true
+      },
+      "reporting": {
+        "regulatory_reports": "automated",
+        "compliance_dashboards": true,
+        "violation_alerts": "real_time",
+        "executive_reporting": "monthly"
+      }
+    },
+    "performance": {
+      "latency_targets": {
+        "api_response_time": "10ms",
+        "market_data_latency": "1ms",
+        "order_execution_latency": "5ms",
+        "real_time_quotes": "sub_millisecond"
+      },
+      "availability": {
+        "sla": "99.99%",
+        "uptime_monitoring": true,
+        "failover": "automatic",
+        "disaster_recovery": true,
+        "multi_region": true
+      },
+      "caching": {
+        "enabled": true,
+        "intelligent_caching": true,
+        "cache_invalidation": "real_time",
+        "edge_caching": true
+      },
+      "load_balancing": {
+        "algorithm": "least_connections",
+        "health_checks": true,
+        "auto_scaling": true,
+        "geographic_distribution": true
+      }
+    },
+    "market_data": {
+      "real_time_data": {
+        "enabled": true,
+        "exchanges": [
+          "NYSE",
+          "NASDAQ",
+          "CBOE",
+          "CME",
+          "ICE",
+          "LSE",
+          "Euronext",
+          "TSE"
+        ],
+        "data_types": [
+          "level_1_quotes",
+          "level_2_order_book",
+          "time_and_sales",
+          "market_depth",
+          "options_chains",
+          "futures_data"
+        ],
+        "streaming": true,
+        "historical_data": "10_years",
+        "tick_data": true
+      },
+      "derived_data": {
+        "technical_indicators": true,
+        "risk_metrics": true,
+        "performance_analytics": true,
+        "correlation_analysis": true
+      },
+      "data_quality": {
+        "validation": "real_time",
+        "cleansing": "automated",
+        "gap_filling": true,
+        "outlier_detection": true
+      }
+    },
+    "trading_capabilities": {
+      "order_types": [
+        "market",
+        "limit",
+        "stop",
+        "stop_limit",
+        "trailing_stop",
+        "iceberg",
+        "twap",
+        "vwap",
+        "implementation_shortfall"
+      ],
+      "execution_algorithms": {
+        "smart_order_routing": true,
+        "dark_pool_access": true,
+        "fragmentation_handling": true,
+        "best_execution": true
+      },
+      "risk_controls": {
+        "pre_trade_checks": true,
+        "position_limits": true,
+        "exposure_limits": true,
+        "concentration_limits": true,
+        "kill_switch": true
+      },
+      "settlement": {
+        "straight_through_processing": true,
+        "trade_matching": "automated",
+        "settlement_instructions": "electronic",
+        "exception_handling": true
+      }
+    },
+    "analytics": {
+      "portfolio_analytics": {
+        "performance_attribution": true,
+        "risk_decomposition": true,
+        "scenario_analysis": true,
+        "stress_testing": true,
+        "monte_carlo_simulation": true
+      },
+      "risk_analytics": {
+        "value_at_risk": true,
+        "expected_shortfall": true,
+        "maximum_drawdown": true,
+        "correlation_analysis": true,
+        "factor_exposure": true
+      },
+      "compliance_analytics": {
+        "trade_surveillance": true,
+        "position_monitoring": true,
+        "limit_monitoring": true,
+        "exception_reporting": true
+      },
+      "client_analytics": {
+        "suitability_analysis": true,
+        "goal_tracking": true,
+        "performance_reporting": true,
+        "fee_analysis": true
+      }
+    },
+    "integration": {
+      "third_party_systems": {
+        "portfolio_management": true,
+        "order_management": true,
+        "risk_management": true,
+        "compliance_systems": true,
+        "accounting_systems": true
+      },
+      "data_feeds": {
+        "market_data_vendors": [
+          "Bloomberg",
+          "Refinitiv",
+          "FactSet",
+          "Morningstar",
+          "S&P_Capital_IQ"
+        ],
+        "fundamental_data": true,
+        "alternative_data": true,
+        "esg_data": true
+      },
+      "messaging": {
+        "fix_protocol": true,
+        "swift_messaging": true,
+        "real_time_messaging": true,
+        "event_streaming": true
+      }
+    },
+    "support": {
+      "technical_support": {
+        "level": "premium",
+        "availability": "24x7",
+        "response_time": "15_minutes",
+        "dedicated_support_team": true,
+        "phone_support": true,
+        "chat_support": true
+      },
+      "account_management": {
+        "dedicated_account_manager": true,
+        "quarterly_business_reviews": true,
+        "implementation_support": true,
+        "training_programs": true
+      },
+      "documentation": {
+        "comprehensive_api_docs": true,
+        "code_samples": true,
+        "sdks": [
+          "python",
+          "java",
+          "csharp",
+          "javascript",
+          "r",
+          "matlab"
+        ],
+        "postman_collections": true
+      }
+    },
+    "monitoring": {
+      "real_time_monitoring": {
+        "api_performance": true,
+        "system_health": true,
+        "error_tracking": true,
+        "usage_analytics": true
+      },
+      "alerting": {
+        "performance_alerts": true,
+        "error_alerts": true,
+        "quota_alerts": true,
+        "security_alerts": true,
+        "compliance_alerts": true
+      },
+      "dashboards": {
+        "executive_dashboard": true,
+        "operational_dashboard": true,
+        "developer_dashboard": true,
+        "compliance_dashboard": true
+      },
+      "reporting": {
+        "usage_reports": "daily",
+        "performance_reports": "weekly",
+        "compliance_reports": "monthly",
+        "executive_reports": "quarterly"
+      }
+    },
+    "disaster_recovery": {
+      "backup_strategy": {
+        "frequency": "continuous",
+        "retention": "7_years",
+        "encryption": true,
+        "geo_replication": true
+      },
+      "failover": {
+        "automatic_failover": true,
+        "rto": "15_minutes",
+        "rpo": "5_minutes",
+        "testing_frequency": "quarterly"
+      },
+      "business_continuity": {
+        "alternative_sites": true,
+        "communication_plans": true,
+        "vendor_management": true,
+        "regulatory_notification": true
+      }
+    }
+  },
+  "pricing": {
+    "base_fee": 50000,
+    "currency": "USD",
+    "billing_frequency": "monthly",
+    "overage_charges": {
+      "api_calls": 0.001,
+      "data_transfer": 0.10,
+      "storage": 1.00
+    },
+    "included_services": [
+      "premium_support",
+      "dedicated_account_manager",
+      "compliance_consulting",
+      "implementation_support",
+      "training_programs"
+    ],
+    "optional_services": [
+      {
+        "name": "custom_integration",
+        "price": 10000,
+        "billing": "one_time"
+      },
+      {
+        "name": "additional_compliance_frameworks",
+        "price": 5000,
+        "billing": "monthly"
+      },
+      {
+        "name": "enhanced_analytics",
+        "price": 15000,
+        "billing": "monthly"
+      }
+    ]
+  },
+  "terms": {
+    "contract_length": "12_months",
+    "auto_renewal": true,
+    "termination_notice": "90_days",
+    "data_retention_after_termination": "7_years",
+    "liability_limits": "contract_value",
+    "indemnification": "mutual",
+    "governing_law": "new_york",
+    "dispute_resolution": "arbitration"
+  }
+}
+
